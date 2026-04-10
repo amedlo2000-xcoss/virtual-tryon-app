@@ -1,0 +1,251 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family:
+    'Helvetica Neue', Arial,
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    Meiryo, sans-serif;
+  background: #f7f7f5;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { height: 100%; }
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 20px 48px;
+}
+
+.page-header { margin-bottom: 28px; }
+
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #bbb;
+  margin-bottom: 6px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.3;
+}
+
+.page-desc {
+  font-size: 14px;
+  color: #777;
+  margin-top: 8px;
+  line-height: 1.7;
+}
+
+.page-content { flex: 1; }
+
+.progress-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  background: #ebebeb;
+  transition: background 0.3s;
+}
+
+.progress-step.done   { background: #bbb; }
+.progress-step.active { background: #111; }
+
+.card {
+  background: #f8f8f6;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.form-group { margin-bottom: 18px; }
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.form-optional {
+  font-size: 11px;
+  font-weight: 400;
+  color: #bbb;
+  background: #f2f2f2;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+input[type="number"],
+input[type="text"],
+select {
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: #111;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: none;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+  border-color: #111;
+}
+
+.upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 14px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.upload-area:hover {
+  border-color: #999;
+  background: #fafafa;
+}
+
+.upload-icon { font-size: 36px; }
+
+.upload-text {
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.upload-text strong { color: #333; }
+
+.image-preview {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 16px;
+  background: #f2f2f2;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  max-height: 300px;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+button {
+  flex: 1;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+button:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+.btn-back {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.btn-next {
+  background: #111;
+  color: #fff;
+}
+
+.btn-primary {
+  background: #111;
+  color: #fff;
+  width: 100%;
+}
+
+.result-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.result-image-box {
+  background: #f2f2f2;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #aaa;
+  text-align: center;
+}
+
+.result-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.result-tryon-area {
+  background: #f8f8f6;
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.7;
+}
