@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
-import { supabase } from '../supabase'
+import ShareButton from '../components/ShareButton'
 
 const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
 
@@ -27,9 +27,6 @@ export default function Result() {
   const [tryonResult, setTryonResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
   const bodyLabels = {
     height: '身長', weight: '体重', bust: '胸囲',
     waist: 'ウエスト', hip: 'ヒップ', usualSize: 'サイズ',
@@ -103,28 +100,6 @@ export default function Result() {
     setLoading(false)
   }
 
-  const handleSave = async () => {
-    setSaving(true)
-    const { error } = await supabase
-      .from('tryon_sessions')
-      .insert([{
-        height: bodyData.height || null,
-        weight: bodyData.weight || null,
-        bust: bodyData.bust || null,
-        waist: bodyData.waist || null,
-        hip: bodyData.hip || null,
-        usual_size: bodyData.usualSize || null,
-        user_image_url: userImage || null,
-        clothes_image_url: clothesImage || null,
-      }])
-    setSaving(false)
-    if (error) {
-      console.error(error)
-    } else {
-      setSaved(true)
-    }
-  }
-
   return (
     <div className="page">
       <ProgressBar current={4} total={4} />
@@ -193,6 +168,7 @@ export default function Result() {
             <div className="portrait-preview">
               <img src={tryonResult} alt="試着結果" />
             </div>
+            <ShareButton imageUrl={tryonResult} />
           </div>
         ) : (
           !loading && (
@@ -228,24 +204,11 @@ export default function Result() {
           </div>
         )}
 
-        {/* 保存完了 */}
-        {saved && (
-          <div className="card" style={{ background: '#F0FAF0', color: '#2d7a2d', textAlign: 'center' }}>
-            ✅ 保存しました
-          </div>
-        )}
-
         {/* アクションボタン */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-          <button
-            className="btn-back"
-            onClick={handleSave}
-            disabled={saving || saved}
-          >
-            {saving ? '保存中...' : saved ? '保存済み ✓' : '保存する'}
-          </button>
+        <div style={{ marginTop: '8px' }}>
           <button
             className="btn-next"
+            style={{ width: '100%' }}
             onClick={() => navigate('/')}
           >
             もう一度試す

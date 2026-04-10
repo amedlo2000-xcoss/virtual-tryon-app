@@ -361,3 +361,54 @@ button:active {
   font-size: 22px;
   line-height: 1;
 }
+
+/* =====================
+   シェア・保存ボタン
+   ===================== */
+.share-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-share {
+  background: #C8956C;
+  color: #ffffff;
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  flex: none;
+}
+
+.btn-share:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.share-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 200;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: toast-fadein 0.2s ease;
+}
+
+@keyframes toast-fadein {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
