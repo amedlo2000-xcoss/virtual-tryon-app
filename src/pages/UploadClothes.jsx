@@ -19,7 +19,6 @@ function ProgressBar({ current, total }) {
   )
 }
 
-// 画像を1024px以内に圧縮する関数
 function resizeImage(file, maxSize = 1024) {
   return new Promise((resolve) => {
     const img = new Image()
@@ -55,7 +54,6 @@ export default function UploadClothes() {
     if (!file) return
     const localUrl = URL.createObjectURL(file)
     setClothesImage(localUrl)
-
     const resized = await resizeImage(file)
     const fileName = `clothes_${Date.now()}.jpg`
     const { error } = await supabase.storage
@@ -76,33 +74,59 @@ export default function UploadClothes() {
         <p className="step-label">Step 3 / 4</p>
         <h1 className="page-title">着せたい服の選択</h1>
         <p className="page-desc">
-          洋服画像があると試着結果の再現性が上がります。
+          縦向きの洋服画像がおすすめです。<br />
           未選択でも次へ進めます。
         </p>
       </div>
       <div className="page-content">
-        <div className="upload-area" onClick={() => inputRef.current.click()}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleFile}
-          />
-          <div className="upload-icon">👚</div>
-          <div className="upload-text">
-            <strong>衣服の画像を選択</strong>
-            正面の商品画像が最適です
+
+        {/* アップロード枠（縦型） */}
+        {!clothesImage && (
+          <div
+            className="portrait-upload-frame"
+            onClick={() => inputRef.current.click()}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
+            <div className="upload-icon">👚</div>
+            <div className="upload-text">
+              <strong>衣服の画像を選択</strong><br />
+              服全体が見える写真を<br />ご利用ください
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* プレビュー（縦型） */}
         {clothesImage && (
-          <div className="image-preview">
+          <div
+            className="portrait-preview"
+            onClick={() => inputRef.current.click()}
+            style={{ cursor: 'pointer' }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
             <img src={clothesImage} alt="選択した服" />
           </div>
         )}
-        <div className="card" style={{ marginTop: '20px' }}>
-          商品ページの画像や、着用画像でもOKです
+
+        <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', marginTop: '10px' }}>
+          {clothesImage ? '画像をタップして変更できます' : ''}
+        </p>
+
+        <div className="card" style={{ marginTop: '16px' }}>
+          💡 商品ページの画像や着用画像でもOKです
         </div>
+
       </div>
       <NavButtons prevPath="/upload-user" nextPath="/result" nextLabel="試着する" />
     </div>

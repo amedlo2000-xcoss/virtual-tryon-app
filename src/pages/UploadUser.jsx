@@ -54,7 +54,6 @@ export default function UploadUser() {
     if (!file) return
     const localUrl = URL.createObjectURL(file)
     setUserImage(localUrl)
-
     const resized = await resizeImage(file)
     const fileName = `user_${Date.now()}.jpg`
     const { error } = await supabase.storage
@@ -75,35 +74,62 @@ export default function UploadUser() {
         <p className="step-label">Step 2 / 4</p>
         <h1 className="page-title">あなたの写真</h1>
         <p className="page-desc">
-          画像があるとより自然な試着イメージになります。
+          正面からの縦向き写真がおすすめです。<br />
           未選択でも次へ進めます。
         </p>
       </div>
       <div className="page-content">
-        <div className="upload-area" onClick={() => inputRef.current.click()}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleFile}
-          />
-          <div className="upload-icon">📷</div>
-          <div className="upload-text">
-            <strong>タップして写真を選択</strong>
-            全身が写った正面写真が最適です
+
+        {/* アップロード枠（縦型） */}
+        {!userImage && (
+          <div
+            className="portrait-upload-frame"
+            onClick={() => inputRef.current.click()}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
+            <div className="upload-icon">📷</div>
+            <div className="upload-text">
+              <strong>タップして写真を選択</strong><br />
+              スマホで撮影した全身または<br />上半身写真をご利用ください
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* プレビュー（縦型） */}
         {userImage && (
-          <div className="image-preview">
+          <div
+            className="portrait-preview"
+            onClick={() => inputRef.current.click()}
+            style={{ cursor: 'pointer' }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
             <img src={userImage} alt="あなたの写真" />
           </div>
         )}
-        <div className="card" style={{ marginTop: '20px' }}>
-          撮影のコツ：全身が映るように撮影する。
-          白・グレーの無地壁を背景にする。
-          ぴったりした服装で撮ると精度が上がる。
+
+        <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', marginTop: '10px' }}>
+          {userImage ? '画像をタップして変更できます' : ''}
+        </p>
+
+        <div className="card" style={{ marginTop: '16px' }}>
+          <strong>📌 撮影のコツ</strong><br />
+          ・縦向きで全身が映るように撮影<br />
+          ・白・グレーの無地壁を背景に<br />
+          ・ぴったりした服装で撮ると精度が上がる
         </div>
+
       </div>
       <NavButtons prevPath="/body" nextPath="/upload-clothes" />
     </div>
