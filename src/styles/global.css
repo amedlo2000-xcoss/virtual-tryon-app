@@ -1,93 +1,124 @@
+/* =====================
+   リセット
+   ===================== */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* =====================
+   ベース
+   ===================== */
 html, body {
   height: 100%;
   font-family:
     'Helvetica Neue', Arial,
     'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
     Meiryo, sans-serif;
-  background: #f7f7f5;
-  color: #1a1a1a;
+  background: #F7F5F2;
+  color: #333333;
   -webkit-font-smoothing: antialiased;
 }
 
-#root { height: 100%; }
+#root {
+  height: 100%;
+}
 
+/* =====================
+   アプリ全体ラッパー
+   ===================== */
 .app-container {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background: #ffffff;
+  background: #F7F5F2;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
+/* =====================
+   ページ共通
+   ===================== */
 .page {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px 20px 48px;
+  padding: 24px 16px 100px;
 }
 
-.page-header { margin-bottom: 28px; }
+.page-header {
+  margin-bottom: 24px;
+}
 
 .step-label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #bbb;
+  color: #E6B89C;
   margin-bottom: 6px;
 }
 
 .page-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #111;
+  color: #333333;
   line-height: 1.3;
 }
 
 .page-desc {
   font-size: 14px;
-  color: #777;
-  margin-top: 8px;
+  color: #999;
+  margin-top: 6px;
   line-height: 1.7;
 }
 
-.page-content { flex: 1; }
+.page-content {
+  flex: 1;
+}
 
+/* =====================
+   プログレスバー
+   ===================== */
 .progress-bar {
   display: flex;
   gap: 6px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .progress-step {
   flex: 1;
   height: 4px;
   border-radius: 4px;
-  background: #ebebeb;
+  background: #E8E3DC;
   transition: background 0.3s;
 }
 
-.progress-step.done   { background: #bbb; }
-.progress-step.active { background: #111; }
+.progress-step.done   { background: #E6B89C; }
+.progress-step.active { background: #C8956C; }
 
+/* =====================
+   カード
+   ===================== */
 .card {
-  background: #f8f8f6;
-  border-radius: 14px;
+  background: #FFFFFF;
+  border-radius: 20px;
   padding: 16px 20px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 13px;
-  color: #555;
+  color: #666;
   line-height: 1.8;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-.form-group { margin-bottom: 18px; }
+/* =====================
+   フォーム
+   ===================== */
+.form-group {
+  margin-bottom: 12px;
+}
 
 .form-label {
   display: flex;
@@ -95,7 +126,7 @@ html, body {
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #444;
+  color: #666;
   margin-bottom: 6px;
 }
 
@@ -103,9 +134,9 @@ html, body {
   font-size: 11px;
   font-weight: 400;
   color: #bbb;
-  background: #f2f2f2;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: #f5f0eb;
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
 input[type="number"],
@@ -113,164 +144,64 @@ input[type="text"],
 select {
   width: 100%;
   height: 48px;
-  border: 1.5px solid #e8e8e8;
-  border-radius: 10px;
-  padding: 0 14px;
+  border: none;
+  border-radius: 12px;
+  padding: 0 16px;
   font-size: 15px;
-  color: #111;
-  background: #fff;
+  color: #333;
+  background: #F7F5F2;
   outline: none;
-  transition: border-color 0.15s;
+  transition: background 0.15s;
   appearance: none;
 }
 
 input[type="number"]:focus,
 input[type="text"]:focus,
 select:focus {
-  border-color: #111;
+  background: #EDE8E1;
 }
 
-.upload-area {
-  border: 2px dashed #ddd;
-  border-radius: 14px;
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.upload-area:hover {
-  border-color: #999;
-  background: #fafafa;
-}
-
-.upload-icon { font-size: 36px; }
-
-.upload-text {
-  font-size: 14px;
-  color: #888;
-  text-align: center;
-  line-height: 1.6;
-}
-
-.upload-text strong { color: #333; }
-
-.image-preview {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 16px;
-  background: #f2f2f2;
-}
-
-.image-preview img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-  max-height: 300px;
-}
-
-.button-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 40px;
-}
-
-button {
-  flex: 1;
-  height: 52px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-}
-
-button:active {
-  opacity: 0.7;
-  transform: scale(0.98);
-}
-
-.btn-back {
-  background: #f0f0f0;
-  color: #555;
-}
-
-.btn-next {
-  background: #111;
-  color: #fff;
-}
-
-.btn-primary {
-  background: #111;
-  color: #fff;
-  width: 100%;
-}
-
-.result-images {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.result-image-box {
-  background: #f2f2f2;
-  border-radius: 12px;
-  overflow: hidden;
-  aspect-ratio: 3 / 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #aaa;
-  text-align: center;
-}
-
-.result-image-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.result-tryon-area {
-  background: #f8f8f6;
-  border-radius: 14px;
-  padding: 32px 20px;
-  text-align: center;
-  margin-bottom: 20px;
-  color: #aaa;
-  font-size: 14px;
-  line-height: 1.7;
-}/* =====================
+/* =====================
    縦型アップロード枠
    ===================== */
 .portrait-upload-frame {
   width: 100%;
   aspect-ratio: 3 / 4;
-  border: 2px dashed #ddd;
-  border-radius: 16px;
+  border: 2px dashed #E6B89C;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
   overflow: hidden;
-  background: #fafafa;
+  background: #FFFFFF;
   transition: border-color 0.15s ease, background 0.15s ease;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .portrait-upload-frame:hover {
-  border-color: #999;
-  background: #f5f5f5;
+  border-color: #C8956C;
+  background: #FDF8F5;
+}
+
+.upload-icon {
+  font-size: 40px;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.upload-text strong {
+  color: #333;
+  display: block;
+  margin-bottom: 4px;
 }
 
 /* =====================
@@ -279,10 +210,10 @@ button:active {
 .portrait-preview {
   width: 100%;
   aspect-ratio: 3 / 4;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   background: #f2f2f2;
-  margin-top: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .portrait-preview img {
@@ -299,7 +230,7 @@ button:active {
 .result-image-card {
   flex: 1;
   aspect-ratio: 3 / 4;
-  border-radius: 14px;
+  border-radius: 20px;
   overflow: hidden;
   background: #f2f2f2;
   display: flex;
@@ -308,6 +239,7 @@ button:active {
   font-size: 12px;
   color: #bbb;
   text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .result-image-card img {
@@ -321,8 +253,8 @@ button:active {
 .result-placeholder {
   width: 100%;
   aspect-ratio: 3 / 4;
-  border-radius: 16px;
-  background: #f8f8f6;
+  border-radius: 20px;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -331,6 +263,101 @@ button:active {
   color: #bbb;
   font-size: 14px;
   text-align: center;
-  border: 1.5px solid #efefef;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   margin-bottom: 20px;
+}
+
+/* =====================
+   ボタン
+   ===================== */
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+button {
+  flex: 1;
+  height: 54px;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+button:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.btn-back {
+  background: #EDE8E1;
+  color: #666;
+}
+
+.btn-next {
+  background: #C8956C;
+  color: #fff;
+}
+
+.btn-primary {
+  background: #C8956C;
+  color: #fff;
+  width: 100%;
+}
+
+/* =====================
+   下部ナビゲーション
+   ===================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 72px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-top: 1px solid #F0EBE4;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  z-index: 100;
+  padding-bottom: 8px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: background 0.15s;
+  border: none;
+  background: none;
+  color: #bbb;
+  font-size: 10px;
+  font-weight: 600;
+  height: auto;
+  flex: none;
+}
+
+.nav-item.active {
+  color: #C8956C;
+}
+
+.nav-item:active {
+  transform: none;
+  opacity: 1;
+  background: #F7F5F2;
+}
+
+.nav-icon {
+  font-size: 22px;
+  line-height: 1;
 }

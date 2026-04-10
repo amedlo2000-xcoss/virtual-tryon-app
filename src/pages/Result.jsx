@@ -42,36 +42,33 @@ export default function Result() {
       setError('人の写真と服の画像の両方をアップロードしてください。')
       return
     }
-
     setLoading(true)
     setError(null)
     setTryonResult(null)
 
     try {
-      const requestBody = {
-        model: 'kling',
-        task_type: 'ai_try_on',
-        input: {
-          model_input: userImage,
-          dress_input: clothesImage,
-          batch_size: 1,
-        },
-      }
-
       const response = await fetch('https://api.piapi.ai/api/v1/task', {
         method: 'POST',
         headers: {
           'x-api-key': PIAPI_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          model: 'kling',
+          task_type: 'ai_try_on',
+          input: {
+            model_input: userImage,
+            dress_input: clothesImage,
+            batch_size: 1,
+          },
+        }),
       })
 
       const data = await response.json()
       const taskId = data?.data?.task_id
 
       if (!taskId) {
-        setError(`処理の開始に失敗しました。`)
+        setError('処理の開始に失敗しました。')
         setLoading(false)
         return
       }
@@ -103,7 +100,6 @@ export default function Result() {
       setError('エラーが発生しました。')
       console.error(e)
     }
-
     setLoading(false)
   }
 
@@ -132,27 +128,39 @@ export default function Result() {
   return (
     <div className="page">
       <ProgressBar current={4} total={4} />
+
       <div className="page-header">
         <p className="step-label">Step 4 / 4</p>
         <h1 className="page-title">試着結果</h1>
-        <p className="page-desc">ボタンを押してAI試着を開始してください。</p>
+        <p className="page-desc">AIが試着画像を生成します。</p>
       </div>
+
       <div className="page-content">
 
         {/* アップロード画像（縦型2列） */}
         {(userImage || clothesImage) && (
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-            <div className="result-image-card">
-              {userImage
-                ? <img src={userImage} alt="あなたの写真" />
-                : <span>写真<br />なし</span>
-              }
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '11px', color: '#bbb', textAlign: 'center', marginBottom: '6px', fontWeight: 600 }}>
+                あなたの写真
+              </p>
+              <div className="result-image-card">
+                {userImage
+                  ? <img src={userImage} alt="あなたの写真" />
+                  : <span>写真<br />なし</span>
+                }
+              </div>
             </div>
-            <div className="result-image-card">
-              {clothesImage
-                ? <img src={clothesImage} alt="選んだ服" />
-                : <span>服の<br />画像なし</span>
-              }
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '11px', color: '#bbb', textAlign: 'center', marginBottom: '6px', fontWeight: 600 }}>
+                選んだ服
+              </p>
+              <div className="result-image-card">
+                {clothesImage
+                  ? <img src={clothesImage} alt="選んだ服" />
+                  : <span>服の<br />画像なし</span>
+                }
+              </div>
             </div>
           </div>
         )}
@@ -161,17 +169,17 @@ export default function Result() {
         {!tryonResult && (
           <button
             className="btn-next"
-            style={{ width: '100%', marginBottom: '16px' }}
+            style={{ width: '100%', marginBottom: '16px', fontSize: '16px', height: '58px' }}
             onClick={handleTryon}
             disabled={loading}
           >
-            {loading ? '⏳ AI試着中...（3〜5分かかります）' : '✨ AI試着を開始する'}
+            {loading ? '⏳ AI試着中...（3〜5分）' : '✨ AI試着を開始する'}
           </button>
         )}
 
         {/* エラー */}
         {error && (
-          <div className="card" style={{ background: '#fff0f0', color: '#cc0000', textAlign: 'center', fontSize: '13px' }}>
+          <div className="card" style={{ background: '#FFF5F5', color: '#cc0000', textAlign: 'center', fontSize: '13px' }}>
             ❌ {error}
           </div>
         )}
@@ -179,7 +187,7 @@ export default function Result() {
         {/* 試着結果（縦型） */}
         {tryonResult ? (
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#C8956C' }}>
               ✅ 試着完了！
             </p>
             <div className="portrait-preview">
@@ -189,8 +197,10 @@ export default function Result() {
         ) : (
           !loading && (
             <div className="result-placeholder">
-              <span style={{ fontSize: '36px' }}>✨</span>
-              <span>ここにAI試着結果が<br />表示されます</span>
+              <span style={{ fontSize: '48px' }}>✨</span>
+              <span style={{ color: '#ccc', fontSize: '14px', lineHeight: 1.7 }}>
+                ここにAI試着結果が<br />表示されます
+              </span>
             </div>
           )
         )}
@@ -198,11 +208,21 @@ export default function Result() {
         {/* 体型情報 */}
         {filledBody.length > 0 && (
           <div className="card">
-            <strong style={{ display: 'block', marginBottom: '8px' }}>📋 入力した体型情報</strong>
+            <strong style={{ display: 'block', marginBottom: '10px', color: '#333' }}>
+              📋 入力した体型情報
+            </strong>
             {filledBody.map(([key, val]) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ color: '#888' }}>{bodyLabels[key]}</span>
-                <span style={{ fontWeight: 600 }}>{val}{key !== 'usualSize' ? ' cm / kg' : ''}</span>
+              <div key={key} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '6px 0',
+                borderBottom: '1px solid #F0EBE4',
+                fontSize: '14px',
+              }}>
+                <span style={{ color: '#999' }}>{bodyLabels[key]}</span>
+                <span style={{ fontWeight: 700, color: '#333' }}>
+                  {val}{key !== 'usualSize' ? ' cm / kg' : ''}
+                </span>
               </div>
             ))}
           </div>
@@ -210,22 +230,30 @@ export default function Result() {
 
         {/* 保存完了 */}
         {saved && (
-          <div className="card" style={{ background: '#f0faf0', color: '#2d7a2d', textAlign: 'center' }}>
+          <div className="card" style={{ background: '#F0FAF0', color: '#2d7a2d', textAlign: 'center' }}>
             ✅ 保存しました
           </div>
         )}
 
         {/* アクションボタン */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-          <button className="btn-back" onClick={handleSave} disabled={saving || saved}>
-            {saving ? '保存中...' : saved ? '保存済み' : '保存する'}
+          <button
+            className="btn-back"
+            onClick={handleSave}
+            disabled={saving || saved}
+          >
+            {saving ? '保存中...' : saved ? '保存済み ✓' : '保存する'}
           </button>
-          <button className="btn-next" onClick={() => navigate('/')}>
+          <button
+            className="btn-next"
+            onClick={() => navigate('/')}
+          >
             もう一度試す
           </button>
         </div>
 
       </div>
+
       <div className="button-row">
         <button className="btn-back" onClick={() => navigate('/upload-clothes')}>
           戻る

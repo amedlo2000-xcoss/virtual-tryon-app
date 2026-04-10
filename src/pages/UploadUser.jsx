@@ -70,6 +70,7 @@ export default function UploadUser() {
   return (
     <div className="page">
       <ProgressBar current={2} total={4} />
+
       <div className="page-header">
         <p className="step-label">Step 2 / 4</p>
         <h1 className="page-title">あなたの写真</h1>
@@ -78,6 +79,7 @@ export default function UploadUser() {
           未選択でも次へ進めます。
         </p>
       </div>
+
       <div className="page-content">
 
         {/* アップロード枠（縦型） */}
@@ -93,44 +95,71 @@ export default function UploadUser() {
               style={{ display: 'none' }}
               onChange={handleFile}
             />
-            <div className="upload-icon">📷</div>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '20px',
+              background: '#F7F5F2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '28px',
+            }}>
+              📷
+            </div>
             <div className="upload-text">
-              <strong>タップして写真を選択</strong><br />
+              <strong>タップして写真を選択</strong>
               スマホで撮影した全身または<br />上半身写真をご利用ください
+            </div>
+            <div style={{
+              background: '#C8956C',
+              color: '#fff',
+              fontSize: '13px',
+              fontWeight: 700,
+              padding: '10px 28px',
+              borderRadius: '20px',
+            }}>
+              写真を選ぶ
             </div>
           </div>
         )}
 
         {/* プレビュー（縦型） */}
         {userImage && (
-          <div
-            className="portrait-preview"
-            onClick={() => inputRef.current.click()}
-            style={{ cursor: 'pointer' }}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFile}
-            />
-            <img src={userImage} alt="あなたの写真" />
-          </div>
+          <>
+            <div
+              className="portrait-preview"
+              onClick={() => inputRef.current.click()}
+              style={{ cursor: 'pointer' }}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFile}
+              />
+              <img src={userImage} alt="あなたの写真" />
+            </div>
+            <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', marginTop: '10px' }}>
+              タップして写真を変更できます
+            </p>
+          </>
         )}
 
-        <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', marginTop: '10px' }}>
-          {userImage ? '画像をタップして変更できます' : ''}
-        </p>
-
         <div className="card" style={{ marginTop: '16px' }}>
-          <strong>📌 撮影のコツ</strong><br />
-          ・縦向きで全身が映るように撮影<br />
-          ・白・グレーの無地壁を背景に<br />
-          ・ぴったりした服装で撮ると精度が上がる
+          <strong style={{ display: 'block', marginBottom: '6px', color: '#333' }}>
+            📌 撮影のコツ
+          </strong>
+          <p style={{ fontSize: '13px', color: '#999', lineHeight: 1.8 }}>
+            ・縦向きで全身が映るように撮影<br />
+            ・白・グレーの無地壁を背景に<br />
+            ・ぴったりした服装で撮ると精度UP
+          </p>
         </div>
 
       </div>
+
       <NavButtons prevPath="/body" nextPath="/upload-clothes" />
     </div>
   )
