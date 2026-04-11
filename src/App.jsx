@@ -10,6 +10,7 @@ import BodyInput     from './pages/BodyInput'
 import UploadUser    from './pages/UploadUser'
 import UploadClothes from './pages/UploadClothes'
 import Result        from './pages/Result'
+import MyPage        from './pages/MyPage'
 
 export default function App() {
   const [bodyData, setBodyData] = useState({
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/upload-user"    element={<PrivateRoute><UploadUser /></PrivateRoute>} />
             <Route path="/upload-clothes" element={<PrivateRoute><UploadClothes /></PrivateRoute>} />
             <Route path="/result"         element={<PrivateRoute><Result /></PrivateRoute>} />
+            <Route path="/mypage"         element={<PrivateRoute><MyPage /></PrivateRoute>} />
           </Routes>
         </div>
       </TryOnContext.Provider>
