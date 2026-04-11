@@ -23,7 +23,13 @@ export default function Auth() {
     setMessage(null)
 
     if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://virtual-tryon-app-phi.vercel.app/'
+        }
+      })
       if (error) {
         setMessage({ type: 'error', text: error.message })
       } else {

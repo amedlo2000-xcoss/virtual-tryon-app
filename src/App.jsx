@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 
 import Auth          from './pages/Auth'
+import AuthCallback  from './pages/AuthCallback'
 import Home          from './pages/Home'
 import BodyInput     from './pages/BodyInput'
 import UploadUser    from './pages/UploadUser'
@@ -28,7 +29,8 @@ export default function App() {
       }}>
         <div className="app-container">
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth"          element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/"    element={<Home />} />
             <Route path="/body"           element={<PrivateRoute><BodyInput /></PrivateRoute>} />
             <Route path="/upload-user"    element={<PrivateRoute><UploadUser /></PrivateRoute>} />
