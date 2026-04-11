@@ -27,6 +27,7 @@ export default function Result() {
   const [tryonResult, setTryonResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [progress, setProgress] = useState(0)
   const bodyLabels = {
     height: '身長', weight: '体重', bust: '胸囲',
     waist: 'ウエスト', hip: 'ヒップ', usualSize: 'サイズ',
@@ -42,6 +43,7 @@ export default function Result() {
     setLoading(true)
     setError(null)
     setTryonResult(null)
+    setProgress(0)
 
     try {
       const response = await fetch('https://api.piapi.ai/api/v1/task', {
@@ -71,8 +73,10 @@ export default function Result() {
       }
 
       let result = null
-      for (let i = 0; i < 60; i++) {
+      const MAX_POLLS = 60
+      for (let i = 0; i < MAX_POLLS; i++) {
         await new Promise(r => setTimeout(r, 5000))
+        setProgress(Math.min(Math.round(((i + 1) / MAX_POLLS) * 100), 99))
         const statusRes = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
           headers: { 'x-api-key': PIAPI_KEY },
         })
@@ -80,6 +84,7 @@ export default function Result() {
         const status = statusData?.data?.status
         if (status === 'completed') {
           result = statusData?.data?.output?.works?.[0]?.image?.resource
+          setProgress(100)
           break
         } else if (status === 'failed') {
           setError('試着処理に失敗しました。')
@@ -156,6 +161,30 @@ export default function Result() {
         {error && (
           <div className="card" style={{ background: '#FFF5F5', color: '#cc0000', textAlign: 'center', fontSize: '13px' }}>
             ❌ {error}
+          </div>
+        )}
+
+        {/* ローディング進捗バー */}
+        {loading && (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '12px', color: '#aaa' }}>AI処理中...</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#C8956C' }}>{progress}%</span>
+            </div>
+            <div style={{ background: '#2a2a2a', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${progress}%`,
+                  background: 'linear-gradient(90deg, #C8956C, #e8b48c)',
+                  borderRadius: '8px',
+                  transition: 'width 0.5s ease',
+                }}
+              />
+            </div>
+            <p style={{ fontSize: '11px', color: '#888', textAlign: 'center', marginTop: '8px' }}>
+              完了まで3〜5分かかります
+            </p>
           </div>
         )}
 
