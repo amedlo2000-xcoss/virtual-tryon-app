@@ -3,7 +3,31 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, loading, signOut } = useAuth()
+
+  if (loading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#F7F5F2',
+        zIndex: 9999,
+      }}>
+        <div style={{
+          width: '44px',
+          height: '44px',
+          border: '4px solid #E8DDD5',
+          borderTop: '4px solid #C8956C',
+          borderRadius: '50%',
+          animation: 'auth-spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes auth-spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
 
   const handleSignOut = async () => {
     await signOut()
