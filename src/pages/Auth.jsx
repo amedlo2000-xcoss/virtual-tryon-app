@@ -40,7 +40,7 @@ export default function Auth() {
       if (error) {
         setMessage({ type: 'error', text: 'メールアドレスまたはパスワードが正しくありません。' })
       } else {
-        navigate('/')
+        navigate('/', { replace: true })
       }
     }
 

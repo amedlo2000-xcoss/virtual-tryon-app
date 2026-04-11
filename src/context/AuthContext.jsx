@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      setLoading(false)  // getSession()より先に発火した場合もloadingを解除する
     })
 
     return () => subscription.unsubscribe()
