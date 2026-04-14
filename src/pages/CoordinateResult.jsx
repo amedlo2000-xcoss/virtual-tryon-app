@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 import ShareButton from '../components/ShareButton'
 import NavButtons from '../components/NavButtons'
 
-const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
+// const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
 const CANVAS_W = 768
 const CANVAS_H = 1024
 const HALF_W = CANVAS_W / 2 // 384
@@ -172,63 +172,82 @@ export default function CoordinateResult() {
       const dressUrl = await composeAndUpload(closetImageUrl, newClothesUrl)
       console.log('[CoordinateResult] ステップ①完了。dressUrl:', dressUrl)
 
-      // ---- ステップ②：C+D=E（Kling AI試着） ----
+      // ---- ステップ②：C+D=E（FASHN V1.6 AI試着） ----
       setCompositeStep(2)
-      console.log('[CoordinateResult] ステップ②：PiAPIリクエスト開始')
+      console.log('[CoordinateResult] ステップ②：FASHN V1.6リクエスト開始')
 
-      const requestBody = {
-        model: 'kling',
-        task_type: 'ai_try_on',
-        input: {
-          model_input: userImage,
-          dress_input: dressUrl,
-          batch_size: 1,
-        },
+      // ---- PiAPI（旧）----
+      // const requestBody = {
+      //   model: 'kling',
+      //   task_type: 'ai_try_on',
+      //   input: {
+      //     model_input: userImage,
+      //     dress_input: dressUrl,
+      //     batch_size: 1,
+      //   },
+      // }
+      // console.log('[CoordinateResult] PiAPIリクエスト内容:', JSON.stringify(requestBody, null, 2))
+      // const response = await fetch('https://api.piapi.ai/api/v1/task', {
+      //   method: 'POST',
+      //   headers: {
+      //     'x-api-key': PIAPI_KEY,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(requestBody),
+      // })
+      // const data = await response.json()
+      // console.log('[CoordinateResult] PiAPI初回レスポンス:', JSON.stringify(data, null, 2))
+      // const taskId = data?.data?.task_id
+
+      const fashnRequestBody = {
+        model_image: userImage,
+        garment_image: dressUrl,
+        category: 'auto',
       }
-      console.log('[CoordinateResult] PiAPIリクエスト内容:', JSON.stringify(requestBody, null, 2))
+      console.log('[CoordinateResult] FASHN V1.6リクエスト内容:', JSON.stringify(fashnRequestBody, null, 2))
 
-      const response = await fetch('https://api.piapi.ai/api/v1/task', {
+      const fashnResponse = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: {
-          'x-api-key': PIAPI_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_FASHN_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(fashnRequestBody),
       })
 
-      const data = await response.json()
-      console.log('[CoordinateResult] PiAPI初回レスポンス:', JSON.stringify(data, null, 2))
+      const fashnData = await fashnResponse.json()
+      console.log('[CoordinateResult] FASHN V1.6初回レスポンス:', JSON.stringify(fashnData, null, 2))
 
-      const taskId = data?.data?.task_id
+      const taskId = fashnData?.id
       if (!taskId) {
-        const errMsg = data?.message || data?.error || data?.data?.error || JSON.stringify(data)
-        console.error('[CoordinateResult] task_id が取得できませんでした。レスポンス:', data)
+        const errMsg = fashnData?.message || fashnData?.error || JSON.stringify(fashnData)
+        console.error('[CoordinateResult] id が取得できませんでした。レスポンス:', fashnData)
         setTryonError(`処理に失敗しました：${errMsg}`)
         setLoading(false)
         setCompositeStep(0)
         return
       }
 
-      console.log('[CoordinateResult] task_id:', taskId)
+      console.log('[CoordinateResult] FASHN task id:', taskId)
 
-      const MAX_POLLS = 60
+      const MAX_POLLS = 100
       let result = null
       for (let i = 0; i < MAX_POLLS; i++) {
-        await new Promise(r => setTimeout(r, 5000))
+        await new Promise(r => setTimeout(r, 3000))
         setProgress(Math.min(Math.round(((i + 1) / MAX_POLLS) * 100), 99))
-        const statusRes = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
-          headers: { 'x-api-key': PIAPI_KEY },
+        const statusRes = await fetch(`https://api.fashn.ai/v1/status/${taskId}`, {
+          headers: { 'Authorization': `Bearer ${import.meta.env.VITE_FASHN_API_KEY}` },
         })
         const statusData = await statusRes.json()
-        const status = statusData?.data?.status
+        const status = statusData?.status
         console.log(`[CoordinateResult] ポーリング ${i + 1}/${MAX_POLLS} - ステータス: ${status}`, statusData)
         if (status === 'completed') {
-          result = statusData?.data?.output?.works?.[0]?.image?.resource
+          result = statusData?.output?.[0]
           console.log('[CoordinateResult] 試着完了。結果URL:', result)
           setProgress(100)
           break
         } else if (status === 'failed') {
-          const errMsg = statusData?.data?.error?.message || statusData?.data?.error || '不明なエラー'
+          const errMsg = statusData?.error?.message || statusData?.error || '不明なエラー'
           console.error('[CoordinateResult] 試着処理失敗。詳細:', statusData)
           setTryonError(`処理に失敗しました：${errMsg}`)
           setLoading(false)
@@ -240,7 +259,7 @@ export default function CoordinateResult() {
       if (result) {
         setTryonResult(result)
       } else {
-        setTryonError('処理に失敗しました：タイムアウトしました。もう一度お試しください。')
+        setTryonError('時間がかかっています。もう一度お試しください。')
       }
     } catch (e) {
       console.error('[CoordinateResult] 例外エラー:', e)

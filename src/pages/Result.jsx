@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 import ShareButton from '../components/ShareButton'
 
-const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
+// const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
 
 function ProgressBar({ current, total }) {
   return (
@@ -46,48 +46,67 @@ export default function Result() {
     setProgress(0)
 
     try {
-      const response = await fetch('https://api.piapi.ai/api/v1/task', {
+      // ---- PiAPI（旧） ----
+      // const response = await fetch('https://api.piapi.ai/api/v1/task', {
+      //   method: 'POST',
+      //   headers: {
+      //     'x-api-key': PIAPI_KEY,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     model: 'kling',
+      //     task_type: 'ai_try_on',
+      //     input: {
+      //       model_input: userImage,
+      //       dress_input: clothesImage,
+      //       batch_size: 1,
+      //     },
+      //   }),
+      // })
+      // const data = await response.json()
+      // const taskId = data?.data?.task_id
+
+      // ---- FASHN V1.6 ----
+      const fashnResponse = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: {
-          'x-api-key': PIAPI_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_FASHN_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'kling',
-          task_type: 'ai_try_on',
-          input: {
-            model_input: userImage,
-            dress_input: clothesImage,
-            batch_size: 1,
-          },
+          model_image: userImage,
+          garment_image: clothesImage,
+          category: 'auto',
         }),
       })
 
-      const data = await response.json()
-      const taskId = data?.data?.task_id
+      const fashnData = await fashnResponse.json()
+      const taskId = fashnData?.id
 
       if (!taskId) {
-        setError('処理の開始に失敗しました。')
+        const errMsg = fashnData?.message || fashnData?.error || JSON.stringify(fashnData)
+        setError(`処理の開始に失敗しました：${errMsg}`)
         setLoading(false)
         return
       }
 
       let result = null
-      const MAX_POLLS = 60
+      const MAX_POLLS = 100
       for (let i = 0; i < MAX_POLLS; i++) {
-        await new Promise(r => setTimeout(r, 5000))
+        await new Promise(r => setTimeout(r, 3000))
         setProgress(Math.min(Math.round(((i + 1) / MAX_POLLS) * 100), 99))
-        const statusRes = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
-          headers: { 'x-api-key': PIAPI_KEY },
+        const statusRes = await fetch(`https://api.fashn.ai/v1/status/${taskId}`, {
+          headers: { 'Authorization': `Bearer ${import.meta.env.VITE_FASHN_API_KEY}` },
         })
         const statusData = await statusRes.json()
-        const status = statusData?.data?.status
+        const status = statusData?.status
         if (status === 'completed') {
-          result = statusData?.data?.output?.works?.[0]?.image?.resource
+          result = statusData?.output?.[0]
           setProgress(100)
           break
         } else if (status === 'failed') {
-          setError('試着処理に失敗しました。')
+          const errMsg = statusData?.error?.message || statusData?.error || '不明なエラー'
+          setError(`試着処理に失敗しました：${errMsg}`)
           setLoading(false)
           return
         }
@@ -96,7 +115,7 @@ export default function Result() {
       if (result) {
         setTryonResult(result)
       } else {
-        setError('タイムアウトしました。もう一度お試しください。')
+        setError('時間がかかっています。もう一度お試しください。')
       }
     } catch (e) {
       setError('エラーが発生しました。')
