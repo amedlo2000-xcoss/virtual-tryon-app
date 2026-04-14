@@ -146,15 +146,13 @@ export default function Closet() {
           </div>
         )}
 
-        {closetItems.length > 0 && (
-          <button
-            className="btn-primary"
-            style={{ marginTop: '20px' }}
-            onClick={() => navigate('/coordinate')}
-          >
-            コーデを作る →
-          </button>
-        )}
+        <button
+          className="btn-primary"
+          style={{ marginTop: '20px' }}
+          onClick={() => navigate('/coordinate')}
+        >
+          コーデを作る →
+        </button>
       </div>
 
       <NavButtons />
