@@ -75,11 +75,22 @@ export default function CoordinateResult() {
   const handleAITryOn = async () => {
     const dressUrl = combinedOutfit?.newClothes
     if (!userImage) {
-      setTryonError('自分の写真を先に追加してください。')
+      setTryonError('処理に失敗しました：自分の写真を先に追加してください。')
       return
     }
     if (!dressUrl) {
-      setTryonError('試着する服が選択されていません。')
+      setTryonError('処理に失敗しました：試着する服が選択されていません。')
+      return
+    }
+    // blob: URLは PiAPI からアクセス不可
+    if (dressUrl.startsWith('blob:')) {
+      setTryonError('処理に失敗しました：服の画像のアップロードが完了していません。前の画面に戻って再度アップロードしてください。')
+      console.error('[CoordinateResult] dress_input が blob URL です。Supabaseへのアップロードが必要です。', dressUrl)
+      return
+    }
+    if (userImage.startsWith('blob:')) {
+      setTryonError('処理に失敗しました：あなたの写真のアップロードが完了していません。写真を再度選択してください。')
+      console.error('[CoordinateResult] model_input が blob URL です。Supabaseへのアップロードが必要です。', userImage)
       return
     }
     setLoading(true)
@@ -88,31 +99,41 @@ export default function CoordinateResult() {
     setProgress(0)
 
     try {
+      const requestBody = {
+        model: 'kling',
+        task_type: 'ai_try_on',
+        input: {
+          model_input: userImage,
+          dress_input: dressUrl,
+          batch_size: 1,
+        },
+      }
+      console.log('[CoordinateResult] PiAPIリクエスト内容:', JSON.stringify(requestBody, null, 2))
+      console.log('[CoordinateResult] model_input (userImage):', userImage)
+      console.log('[CoordinateResult] dress_input (newClothes):', dressUrl)
+
       const response = await fetch('https://api.piapi.ai/api/v1/task', {
         method: 'POST',
         headers: {
           'x-api-key': PIAPI_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'kling',
-          task_type: 'ai_try_on',
-          input: {
-            model_input: userImage,
-            dress_input: dressUrl,
-            batch_size: 1,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
-      const taskId = data?.data?.task_id
+      console.log('[CoordinateResult] PiAPI初回レスポンス:', JSON.stringify(data, null, 2))
 
+      const taskId = data?.data?.task_id
       if (!taskId) {
-        setTryonError('処理の開始に失敗しました。')
+        const errMsg = data?.message || data?.error || data?.data?.error || JSON.stringify(data)
+        console.error('[CoordinateResult] task_id が取得できませんでした。レスポンス:', data)
+        setTryonError(`処理に失敗しました：${errMsg}`)
         setLoading(false)
         return
       }
+
+      console.log('[CoordinateResult] task_id:', taskId)
 
       const MAX_POLLS = 60
       let result = null
@@ -124,12 +145,16 @@ export default function CoordinateResult() {
         })
         const statusData = await statusRes.json()
         const status = statusData?.data?.status
+        console.log(`[CoordinateResult] ポーリング ${i + 1}/${MAX_POLLS} - ステータス: ${status}`, statusData)
         if (status === 'completed') {
           result = statusData?.data?.output?.works?.[0]?.image?.resource
+          console.log('[CoordinateResult] 試着完了。結果URL:', result)
           setProgress(100)
           break
         } else if (status === 'failed') {
-          setTryonError('試着処理に失敗しました。')
+          const errMsg = statusData?.data?.error?.message || statusData?.data?.error || '不明なエラー'
+          console.error('[CoordinateResult] 試着処理失敗。詳細:', statusData)
+          setTryonError(`処理に失敗しました：${errMsg}`)
           setLoading(false)
           return
         }
@@ -138,11 +163,11 @@ export default function CoordinateResult() {
       if (result) {
         setTryonResult(result)
       } else {
-        setTryonError('タイムアウトしました。もう一度お試しください。')
+        setTryonError('処理に失敗しました：タイムアウトしました。もう一度お試しください。')
       }
     } catch (e) {
-      console.error(e)
-      setTryonError('エラーが発生しました。')
+      console.error('[CoordinateResult] 例外エラー:', e)
+      setTryonError(`処理に失敗しました：${e.message || 'ネットワークエラー'}`)
     }
     setLoading(false)
   }

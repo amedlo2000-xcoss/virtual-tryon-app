@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabase'
 import { useTryOn } from '../context/TryOnContext'
 import NavButtons from '../components/NavButtons'
 
@@ -33,16 +34,40 @@ function resizeImage(file, maxSize = 1024) {
 export default function Coordinate() {
   const { selectedClosetItem, setCombinedOutfit } = useTryOn()
   const [newClothesImage, setNewClothesImage] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const resized = await resizeImage(file)
-    const url = URL.createObjectURL(resized)
-    setNewClothesImage(url)
-    e.target.value = ''
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const resized = await resizeImage(file)
+      // ローカルプレビューを先に表示
+      const localUrl = URL.createObjectURL(resized)
+      setNewClothesImage(localUrl)
+      // Supabase Storageにアップロードして公開URLを取得
+      const fileName = `coordinate_${Date.now()}.jpg`
+      const { error } = await supabase.storage
+        .from('tryon-images')
+        .upload(fileName, resized, { upsert: true, contentType: 'image/jpeg' })
+      if (error) throw error
+      const { data: urlData } = supabase.storage
+        .from('tryon-images')
+        .getPublicUrl(fileName)
+      console.log('[Coordinate] 新しい服のSupabase公開URL:', urlData.publicUrl)
+      setNewClothesImage(urlData.publicUrl)
+    } catch (err) {
+      console.error('[Coordinate] 服のアップロードエラー:', err)
+      setNewClothesImage(null)
+      setUploadError('アップロードに失敗しました。もう一度お試しください。')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   const handleTryOn = () => {
@@ -249,16 +274,22 @@ export default function Coordinate() {
           onChange={handleFileUpload}
         />
 
+        {uploadError && (
+          <div className="card" style={{ background: '#FFF5F5', color: '#cc0000', textAlign: 'center', fontSize: '13px', marginBottom: '12px' }}>
+            {uploadError}
+          </div>
+        )}
+
         <button
           className="btn-primary"
           onClick={handleTryOn}
-          disabled={!newClothesImage}
-          style={{ opacity: newClothesImage ? 1 : 0.45 }}
+          disabled={!newClothesImage || uploading}
+          style={{ opacity: (newClothesImage && !uploading) ? 1 : 0.45 }}
         >
-          この組み合わせで試着する
+          {uploading ? 'アップロード中...' : 'この組み合わせで試着する'}
         </button>
 
-        {!newClothesImage && (
+        {!newClothesImage && !uploading && (
           <p style={{
             textAlign: 'center',
             fontSize: '12px',
