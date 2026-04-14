@@ -200,9 +200,12 @@ export default function CoordinateResult() {
       // const taskId = data?.data?.task_id
 
       const fashnRequestBody = {
-        model_image: userImage,
-        garment_image: dressUrl,
-        category: 'auto',
+        model_name: 'tryon-v1.6',
+        inputs: {
+          model_image: userImage,
+          garment_image: dressUrl,
+          category: 'auto',
+        },
       }
       console.log('[CoordinateResult] FASHN V1.6リクエスト内容:', JSON.stringify(fashnRequestBody, null, 2))
 

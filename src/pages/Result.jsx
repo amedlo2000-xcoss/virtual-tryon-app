@@ -74,9 +74,12 @@ export default function Result() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model_image: userImage,
-          garment_image: clothesImage,
-          category: 'auto',
+          model_name: 'tryon-v1.6',
+          inputs: {
+            model_image: userImage,
+            garment_image: clothesImage,
+            category: 'auto',
+          },
         }),
       })
 
