@@ -23,27 +23,54 @@ export default function Auth() {
     setMessage(null)
 
     if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({
+      console.log('[Auth] signUp 開始:', email)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: 'https://virtual-tryon-app-phi.vercel.app/'
         }
       })
+      console.log('[Auth] signUp 結果 data:', data, ' error:', error)
+
       if (error) {
-        setMessage({ type: 'error', text: error.message })
+        console.error('[Auth] signUp エラー:', error.message, error.status)
+        setMessage({ type: 'error', text: `登録に失敗しました: ${error.message}` })
+      } else if (data.session) {
+        // メール確認不要（auto-confirm ON）→ そのままホームへ遷移
+        console.log('[Auth] signUp 自動確認済み, user:', data.user?.id, '→ / へ遷移')
+        navigate('/', { replace: true })
+        return
       } else {
-        // 自動確認の場合もセッションを破棄して確認メッセージを表示する
-        await supabase.auth.signOut()
+        // メール確認が必要 → 確認メッセージを表示
+        console.log('[Auth] signUp メール確認待ち, user:', data.user?.id)
         setEmail('')
         setPassword('')
         setMessage({ type: 'success', text: '確認メールを送信しました。メールをご確認ください。' })
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('[Auth] signIn 開始:', email)
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('[Auth] signIn 結果 data:', data, ' error:', error)
+
       if (error) {
-        setMessage({ type: 'error', text: 'メールアドレスまたはパスワードが正しくありません。' })
+        console.error('[Auth] signIn エラー:', error.message, error.status)
+        let errorMsg
+        const msg = error.message ?? ''
+        if (msg.includes('Email not confirmed')) {
+          errorMsg = 'メールアドレスの確認が完了していません。届いた確認メールのリンクをクリックしてください。'
+        } else if (msg.includes('Invalid login credentials') || error.status === 400) {
+          errorMsg = 'メールアドレスまたはパスワードが正しくありません。'
+        } else if (msg.includes('Too many requests')) {
+          errorMsg = 'リクエストが多すぎます。しばらく待ってから再度お試しください。'
+        } else if (msg.includes('User not found')) {
+          errorMsg = 'このメールアドレスは登録されていません。'
+        } else {
+          errorMsg = `ログインに失敗しました: ${msg}`
+        }
+        setMessage({ type: 'error', text: errorMsg })
       } else {
+        console.log('[Auth] signIn 成功, user:', data.user?.id, '→ / へ遷移')
         navigate('/', { replace: true })
       }
     }
