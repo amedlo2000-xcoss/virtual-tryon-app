@@ -4,14 +4,17 @@ import { TryOnContext } from './context/TryOnContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 
-import Auth          from './pages/Auth'
-import AuthCallback  from './pages/AuthCallback'
-import Home          from './pages/Home'
-import BodyInput     from './pages/BodyInput'
-import UploadUser    from './pages/UploadUser'
-import UploadClothes from './pages/UploadClothes'
-import Result        from './pages/Result'
-import MyPage        from './pages/MyPage'
+import Auth             from './pages/Auth'
+import AuthCallback      from './pages/AuthCallback'
+import Home              from './pages/Home'
+import BodyInput         from './pages/BodyInput'
+import UploadUser        from './pages/UploadUser'
+import UploadClothes     from './pages/UploadClothes'
+import Result            from './pages/Result'
+import MyPage            from './pages/MyPage'
+import Closet            from './pages/Closet'
+import Coordinate        from './pages/Coordinate'
+import CoordinateResult  from './pages/CoordinateResult'
 
 function GlobalSpinner() {
   return (
@@ -42,8 +45,11 @@ function AppContent() {
   const [bodyData, setBodyData] = useState({
     height: '', weight: '', bust: '', waist: '', hip: '', usualSize: ''
   })
-  const [userImage, setUserImage]       = useState(null)
-  const [clothesImage, setClothesImage] = useState(null)
+  const [userImage, setUserImage]                     = useState(null)
+  const [clothesImage, setClothesImage]               = useState(null)
+  const [closetItems, setClosetItems]                 = useState([])
+  const [selectedClosetItem, setSelectedClosetItem]   = useState(null)
+  const [combinedOutfit, setCombinedOutfit]           = useState(null)
 
   if (loading) return <GlobalSpinner />
 
@@ -52,6 +58,9 @@ function AppContent() {
       bodyData, setBodyData,
       userImage, setUserImage,
       clothesImage, setClothesImage,
+      closetItems, setClosetItems,
+      selectedClosetItem, setSelectedClosetItem,
+      combinedOutfit, setCombinedOutfit,
     }}>
       <div className="app-container">
         <Routes>
@@ -61,8 +70,11 @@ function AppContent() {
           <Route path="/body"           element={<PrivateRoute><BodyInput /></PrivateRoute>} />
           <Route path="/upload-user"    element={<PrivateRoute><UploadUser /></PrivateRoute>} />
           <Route path="/upload-clothes" element={<PrivateRoute><UploadClothes /></PrivateRoute>} />
-          <Route path="/result"         element={<PrivateRoute><Result /></PrivateRoute>} />
-          <Route path="/mypage"         element={<PrivateRoute><MyPage /></PrivateRoute>} />
+          <Route path="/result"              element={<PrivateRoute><Result /></PrivateRoute>} />
+          <Route path="/mypage"             element={<PrivateRoute><MyPage /></PrivateRoute>} />
+          <Route path="/closet"             element={<PrivateRoute><Closet /></PrivateRoute>} />
+          <Route path="/coordinate"         element={<PrivateRoute><Coordinate /></PrivateRoute>} />
+          <Route path="/coordinate-result"  element={<PrivateRoute><CoordinateResult /></PrivateRoute>} />
         </Routes>
       </div>
     </TryOnContext.Provider>

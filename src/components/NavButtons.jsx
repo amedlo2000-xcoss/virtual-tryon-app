@@ -8,7 +8,7 @@ function BottomNav() {
   const items = [
     { icon: '🏠', label: 'Home', path: '/' },
     { icon: '👗', label: 'Try', path: '/upload-user' },
-    { icon: '👚', label: 'Closet', path: '/upload-clothes' },
+    { icon: '👚', label: 'Closet', path: '/closet' },
     { icon: '❤️', label: 'Like', path: '/result' },
     { icon: '👤', label: 'My', path: '/mypage' },
   ]
