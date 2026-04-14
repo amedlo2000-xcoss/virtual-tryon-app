@@ -5,6 +5,9 @@ import ShareButton from '../components/ShareButton'
 import NavButtons from '../components/NavButtons'
 
 const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
+const CANVAS_W = 768
+const CANVAS_H = 1024
+const HALF_W = CANVAS_W / 2 // 384
 
 function resizeImage(file, maxSize = 1024) {
   return new Promise((resolve) => {
@@ -32,6 +35,68 @@ function resizeImage(file, maxSize = 1024) {
   })
 }
 
+function loadImageWithCORS(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`画像の読み込みに失敗しました: ${url}`))
+    img.src = url
+  })
+}
+
+async function composeAndUpload(leftUrl, rightUrl) {
+  const canvas = document.createElement('canvas')
+  canvas.width = CANVAS_W
+  canvas.height = CANVAS_H
+  const ctx = canvas.getContext('2d')
+
+  // 白背景
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
+
+  // 左側（クローゼットの服）
+  if (leftUrl) {
+    const imgA = await loadImageWithCORS(leftUrl)
+    const scale = Math.min(HALF_W / imgA.width, CANVAS_H / imgA.height)
+    const w = imgA.width * scale
+    const h = imgA.height * scale
+    const x = (HALF_W - w) / 2
+    const y = (CANVAS_H - h) / 2
+    ctx.drawImage(imgA, x, y, w, h)
+  }
+
+  // 右側（新しい服）
+  if (rightUrl) {
+    const imgB = await loadImageWithCORS(rightUrl)
+    const scale = Math.min(HALF_W / imgB.width, CANVAS_H / imgB.height)
+    const w = imgB.width * scale
+    const h = imgB.height * scale
+    const x = HALF_W + (HALF_W - w) / 2
+    const y = (CANVAS_H - h) / 2
+    ctx.drawImage(imgB, x, y, w, h)
+  }
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) resolve(b)
+      else reject(new Error('Canvas to Blob の変換に失敗しました'))
+    }, 'image/jpeg', 0.9)
+  })
+
+  const fileName = `coordinate-${Date.now()}.jpg`
+  const { error } = await supabase.storage
+    .from('tryon-images')
+    .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' })
+  if (error) throw error
+
+  const { data: urlData } = supabase.storage
+    .from('tryon-images')
+    .getPublicUrl(fileName)
+
+  return urlData.publicUrl
+}
+
 export default function CoordinateResult() {
   const { userImage, setUserImage, combinedOutfit } = useTryOn()
   const inputRef = useRef(null)
@@ -41,6 +106,7 @@ export default function CoordinateResult() {
 
   const [tryonResult, setTryonResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [compositeStep, setCompositeStep] = useState(0) // 0=idle 1=合成中 2=AI処理中
   const [progress, setProgress] = useState(0)
   const [tryonError, setTryonError] = useState(null)
 
@@ -50,7 +116,6 @@ export default function CoordinateResult() {
     if (!file) return
     setUploading(true)
     setUploadError(null)
-    // ローカルプレビューを先に表示
     const localUrl = URL.createObjectURL(file)
     setUserImage(localUrl)
     try {
@@ -71,34 +136,46 @@ export default function CoordinateResult() {
     setUploading(false)
   }
 
-  // ---- AI試着 ----
+  // ---- AI試着（2ステップ） ----
   const handleAITryOn = async () => {
-    const dressUrl = combinedOutfit?.newClothes
+    const closetImageUrl = combinedOutfit?.closetItem?.image_url
+    const newClothesUrl = combinedOutfit?.newClothes
+
     if (!userImage) {
       setTryonError('処理に失敗しました：自分の写真を先に追加してください。')
       return
     }
-    if (!dressUrl) {
+    if (!closetImageUrl && !newClothesUrl) {
       setTryonError('処理に失敗しました：試着する服が選択されていません。')
-      return
-    }
-    // blob: URLは PiAPI からアクセス不可
-    if (dressUrl.startsWith('blob:')) {
-      setTryonError('処理に失敗しました：服の画像のアップロードが完了していません。前の画面に戻って再度アップロードしてください。')
-      console.error('[CoordinateResult] dress_input が blob URL です。Supabaseへのアップロードが必要です。', dressUrl)
       return
     }
     if (userImage.startsWith('blob:')) {
       setTryonError('処理に失敗しました：あなたの写真のアップロードが完了していません。写真を再度選択してください。')
-      console.error('[CoordinateResult] model_input が blob URL です。Supabaseへのアップロードが必要です。', userImage)
+      console.error('[CoordinateResult] model_input が blob URL です。', userImage)
       return
     }
+    if (closetImageUrl?.startsWith('blob:') || newClothesUrl?.startsWith('blob:')) {
+      setTryonError('処理に失敗しました：服の画像のアップロードが完了していません。前の画面に戻って再度アップロードしてください。')
+      console.error('[CoordinateResult] dress_input が blob URL です。', { closetImageUrl, newClothesUrl })
+      return
+    }
+
     setLoading(true)
     setTryonError(null)
     setTryonResult(null)
     setProgress(0)
 
     try {
+      // ---- ステップ①：A+B=D（Canvas合成） ----
+      setCompositeStep(1)
+      console.log('[CoordinateResult] ステップ①：Canvas合成開始', { closetImageUrl, newClothesUrl })
+      const dressUrl = await composeAndUpload(closetImageUrl, newClothesUrl)
+      console.log('[CoordinateResult] ステップ①完了。dressUrl:', dressUrl)
+
+      // ---- ステップ②：C+D=E（Kling AI試着） ----
+      setCompositeStep(2)
+      console.log('[CoordinateResult] ステップ②：PiAPIリクエスト開始')
+
       const requestBody = {
         model: 'kling',
         task_type: 'ai_try_on',
@@ -109,8 +186,6 @@ export default function CoordinateResult() {
         },
       }
       console.log('[CoordinateResult] PiAPIリクエスト内容:', JSON.stringify(requestBody, null, 2))
-      console.log('[CoordinateResult] model_input (userImage):', userImage)
-      console.log('[CoordinateResult] dress_input (newClothes):', dressUrl)
 
       const response = await fetch('https://api.piapi.ai/api/v1/task', {
         method: 'POST',
@@ -130,6 +205,7 @@ export default function CoordinateResult() {
         console.error('[CoordinateResult] task_id が取得できませんでした。レスポンス:', data)
         setTryonError(`処理に失敗しました：${errMsg}`)
         setLoading(false)
+        setCompositeStep(0)
         return
       }
 
@@ -156,6 +232,7 @@ export default function CoordinateResult() {
           console.error('[CoordinateResult] 試着処理失敗。詳細:', statusData)
           setTryonError(`処理に失敗しました：${errMsg}`)
           setLoading(false)
+          setCompositeStep(0)
           return
         }
       }
@@ -169,7 +246,9 @@ export default function CoordinateResult() {
       console.error('[CoordinateResult] 例外エラー:', e)
       setTryonError(`処理に失敗しました：${e.message || 'ネットワークエラー'}`)
     }
+
     setLoading(false)
+    setCompositeStep(0)
   }
 
   return (
@@ -332,8 +411,19 @@ export default function CoordinateResult() {
           </div>
         )}
 
-        {/* ローディング進捗バー */}
-        {loading && (
+        {/* ローディング表示 */}
+        {loading && compositeStep === 1 && (
+          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', color: '#C8956C', fontWeight: 700 }}>
+              コーデを合成中...
+            </p>
+            <p style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>
+              クローゼットの服と新しい服を組み合わせています
+            </p>
+          </div>
+        )}
+
+        {loading && compositeStep === 2 && (
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
               <span style={{ fontSize: '12px', color: '#aaa' }}>AI処理中...</span>
@@ -370,7 +460,7 @@ export default function CoordinateResult() {
               <button
                 className="btn-primary"
                 style={{ background: '#EDE8E1', color: '#666' }}
-                onClick={() => { setTryonResult(null); setProgress(0) }}
+                onClick={() => { setTryonResult(null); setProgress(0); setCompositeStep(0) }}
               >
                 もう一度試着する
               </button>
