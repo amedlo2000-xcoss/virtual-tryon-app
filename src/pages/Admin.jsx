@@ -1,0 +1,735 @@
+/**
+ * 管理者ダッシュボード
+ *
+ * ── ユーザー削除機能について ─────────────────────────────────────────────────
+ * supabase.auth.admin.deleteUser() はサービスロールキーが必要なため、
+ * フロントエンドから直接呼び出すことはセキュリティ上推奨されません。
+ * 本番環境では Supabase Edge Function を作成し、サーバー側で実行してください。
+ *
+ * Edge Function の実装例:
+ *   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+ *   const supabaseAdmin = createClient(
+ *     Deno.env.get('SUPABASE_URL'),
+ *     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+ *   )
+ *   // Deno.serve(async (req) => { const { userId } = await req.json()
+ *   //   await supabaseAdmin.auth.admin.deleteUser(userId) })
+ *
+ * 現実装: is_banned = true のソフトデリートのみ対応。
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabase'
+import { useAuth } from '../context/AuthContext'
+import {
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
+
+// ─── 定数 ────────────────────────────────────────────────────────────────────
+const ACCENT   = '#C8956C'
+const PAGE_SIZE = 10
+
+// ─── ユーティリティ ───────────────────────────────────────────────────────────
+function formatDate(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+}
+
+function daysAgo(n) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+function monthsAgo(n) {
+  const d = new Date()
+  d.setMonth(d.getMonth() - n)
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+// ─── サブコンポーネント ───────────────────────────────────────────────────────
+function KpiCard({ label, value, loading }) {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '20px',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      padding: '20px',
+    }}>
+      <p style={{ fontSize: '11px', color: '#999', fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
+        {label}
+      </p>
+      {loading ? (
+        <div style={{
+          height: '32px',
+          background: '#F0EAE3',
+          borderRadius: '8px',
+          animation: 'pulse 1.5s ease-in-out infinite',
+        }} />
+      ) : (
+        <p style={{ fontSize: '28px', fontWeight: 800, color: '#333', margin: 0, lineHeight: 1 }}>
+          {value?.toLocaleString() ?? '—'}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function ChartCard({ title, children }) {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: '20px',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      padding: '20px',
+      marginBottom: '16px',
+    }}>
+      <p style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 16px' }}>
+        {title}
+      </p>
+      {children}
+    </div>
+  )
+}
+
+function Spinner() {
+  return (
+    <span style={{
+      display: 'inline-block',
+      width: '14px',
+      height: '14px',
+      border: '2px solid rgba(255,255,255,0.4)',
+      borderTop: '2px solid #fff',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite',
+    }} />
+  )
+}
+
+// ─── メインコンポーネント ─────────────────────────────────────────────────────
+export default function Admin() {
+  const { signOut } = useAuth()
+  const navigate    = useNavigate()
+
+  // KPI
+  const [kpi, setKpi]           = useState({})
+  const [kpiLoading, setKpiLoading] = useState(true)
+
+  // グラフ
+  const [tryonDaily, setTryonDaily]     = useState([])
+  const [regMonthly, setRegMonthly]     = useState([])
+  const [closetDaily, setClosetDaily]   = useState([])
+  const [graphLoading, setGraphLoading] = useState(true)
+
+  // ユーザー一覧
+  const [users, setUsers]         = useState([])
+  const [userCount, setUserCount] = useState(0)
+  const [page, setPage]           = useState(0)
+  const [userLoading, setUserLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState({})
+  const [toast, setToast]         = useState(null)
+
+  // ─── データ取得 ─────────────────────────────────────────────────────────────
+  const loadKpi = useCallback(async () => {
+    setKpiLoading(true)
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0)
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0)
+    const week7ago   = daysAgo(7)
+
+    const [
+      { count: totalUsers },
+      { count: todayNew },
+      { count: monthNew },
+      { count: tryonTotal },
+      { count: closetTotal },
+      { count: activeUsers },
+    ] = await Promise.all([
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true })
+        .gte('created_at', todayStart.toISOString()),
+      supabase.from('profiles').select('*', { count: 'exact', head: true })
+        .gte('created_at', monthStart.toISOString()),
+      supabase.from('tryon_results').select('*', { count: 'exact', head: true }),
+      supabase.from('closet_items').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true })
+        .gte('last_login_at', week7ago),
+    ])
+
+    setKpi({ totalUsers, todayNew, monthNew, tryonTotal, closetTotal, activeUsers })
+    setKpiLoading(false)
+  }, [])
+
+  const loadGraphs = useCallback(async () => {
+    setGraphLoading(true)
+
+    // 過去30日の日別ラベル
+    const days30 = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - (29 - i))
+      return d.toISOString().slice(0, 10)
+    })
+
+    // 過去12ヶ月のラベル
+    const months12 = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date()
+      d.setMonth(d.getMonth() - (11 - i))
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    })
+
+    const [tryonRes, regRes, closetRes] = await Promise.all([
+      supabase.from('tryon_results').select('created_at').gte('created_at', daysAgo(30)),
+      supabase.from('profiles').select('created_at').gte('created_at', monthsAgo(12)),
+      supabase.from('closet_items').select('created_at').gte('created_at', daysAgo(30)),
+    ])
+
+    // 日別集計ヘルパー
+    const countByDay = (rows) => {
+      const map = {}
+      ;(rows || []).forEach(r => {
+        const day = r.created_at?.slice(0, 10)
+        if (day) map[day] = (map[day] || 0) + 1
+      })
+      return days30.map(d => ({ date: d.slice(5), count: map[d] || 0 }))
+    }
+
+    // 月別集計ヘルパー
+    const countByMonth = (rows) => {
+      const map = {}
+      ;(rows || []).forEach(r => {
+        const mo = r.created_at?.slice(0, 7)
+        if (mo) map[mo] = (map[mo] || 0) + 1
+      })
+      return months12.map(m => ({ month: m.slice(5) + '月', count: map[m] || 0 }))
+    }
+
+    setTryonDaily(countByDay(tryonRes.data))
+    setRegMonthly(countByMonth(regRes.data))
+    setClosetDaily(countByDay(closetRes.data))
+    setGraphLoading(false)
+  }, [])
+
+  const loadUsers = useCallback(async (pg = 0) => {
+    setUserLoading(true)
+    const from = pg * PAGE_SIZE
+    const to   = from + PAGE_SIZE - 1
+
+    const { data, count, error } = await supabase
+      .from('profiles')
+      .select('id, email, created_at, is_admin, is_banned, last_login_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (!error) {
+      // AI試着回数を結合
+      const userIds = (data || []).map(u => u.id)
+      const { data: tryonCounts } = await supabase
+        .from('tryon_results')
+        .select('user_id')
+        .in('user_id', userIds)
+
+      const countMap = {}
+      ;(tryonCounts || []).forEach(r => {
+        countMap[r.user_id] = (countMap[r.user_id] || 0) + 1
+      })
+
+      setUsers((data || []).map(u => ({ ...u, tryon_count: countMap[u.id] || 0 })))
+      setUserCount(count || 0)
+    }
+    setUserLoading(false)
+  }, [])
+
+  useEffect(() => {
+    loadKpi()
+    loadGraphs()
+    loadUsers(0)
+  }, [loadKpi, loadGraphs, loadUsers])
+
+  // ─── ユーザー操作 ───────────────────────────────────────────────────────────
+  const showToast = (type, text) => {
+    setToast({ type, text })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleBan = async (userId, currentBanned) => {
+    setActionLoading(prev => ({ ...prev, [`ban_${userId}`]: true }))
+    const newVal = !currentBanned
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_banned: newVal })
+      .eq('id', userId)
+
+    if (error) {
+      showToast('error', '操作に失敗しました: ' + error.message)
+    } else {
+      showToast('success', newVal ? 'ユーザーを停止しました' : '停止を解除しました')
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_banned: newVal } : u))
+    }
+    setActionLoading(prev => ({ ...prev, [`ban_${userId}`]: false }))
+  }
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm('このユーザーを削除しますか？この操作は取り消せません。')) return
+    setActionLoading(prev => ({ ...prev, [`del_${userId}`]: true }))
+
+    /**
+     * ⚠️ supabase.auth.admin.deleteUser() にはサービスロールキーが必要です。
+     * フロントエンドでの直接呼び出しはセキュリティリスクがあるため、
+     * 本番環境では Supabase Edge Function を経由してください。
+     * 現状は profiles テーブルの is_banned = true に設定し、
+     * closet_items・tryon_results を削除するソフトデリートを行います。
+     */
+    const [p1, p2, p3] = await Promise.all([
+      supabase.from('profiles').delete().eq('id', userId),
+      supabase.from('closet_items').delete().eq('user_id', userId),
+      supabase.from('tryon_results').delete().eq('user_id', userId),
+    ])
+
+    if (p1.error) {
+      showToast('error', '削除に失敗しました: ' + p1.error.message)
+    } else {
+      showToast('success', 'ユーザーを削除しました')
+      setUsers(prev => prev.filter(u => u.id !== userId))
+      setUserCount(c => c - 1)
+    }
+    setActionLoading(prev => ({ ...prev, [`del_${userId}`]: false }))
+  }
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    loadUsers(newPage)
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/admin-login', { replace: true })
+  }
+
+  const totalPages = Math.ceil(userCount / PAGE_SIZE)
+
+  // ─── レンダリング ────────────────────────────────────────────────────────────
+  return (
+    <div style={{ minHeight: '100vh', background: '#F7F5F2' }}>
+
+      {/* ヘッダー */}
+      <div style={{
+        background: '#FFFFFF',
+        borderBottom: '1px solid #F0EAE3',
+        padding: '16px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#333', margin: 0 }}>
+            Miron 管理画面
+          </h1>
+          <p style={{ fontSize: '11px', color: '#C8956C', fontWeight: 600, margin: '2px 0 0', letterSpacing: '0.08em' }}>
+            ADMIN DASHBOARD
+          </p>
+        </div>
+        <button
+          onClick={handleSignOut}
+          style={{
+            background: 'none',
+            border: '1px solid #E8E0D8',
+            borderRadius: '20px',
+            padding: '7px 16px',
+            fontSize: '12px',
+            color: '#888',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+          }}
+          onMouseEnter={e => (e.target.style.borderColor = '#C8956C')}
+          onMouseLeave={e => (e.target.style.borderColor = '#E8E0D8')}
+        >
+          ログアウト
+        </button>
+      </div>
+
+      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* ① KPIカード */}
+        <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#888', margin: '0 0 16px', letterSpacing: '0.08em' }}>
+          KPI サマリー
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+          marginBottom: '32px',
+        }}>
+          <KpiCard label="総ユーザー数"                  value={kpi.totalUsers}  loading={kpiLoading} />
+          <KpiCard label="本日の新規登録"                value={kpi.todayNew}    loading={kpiLoading} />
+          <KpiCard label="今月の新規登録"                value={kpi.monthNew}    loading={kpiLoading} />
+          <KpiCard label="AI試着 総回数"                 value={kpi.tryonTotal}  loading={kpiLoading} />
+          <KpiCard label="クローゼット登録 総数"         value={kpi.closetTotal} loading={kpiLoading} />
+          <KpiCard label="アクティブユーザー（7日以内）" value={kpi.activeUsers} loading={kpiLoading} />
+        </div>
+
+        {/* ② グラフ */}
+        <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#888', margin: '0 0 16px', letterSpacing: '0.08em' }}>
+          グラフ
+        </h2>
+
+        {graphLoading ? (
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '20px',
+            height: '200px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px',
+            color: '#ccc',
+            fontSize: '13px',
+          }}>
+            グラフを読み込み中...
+          </div>
+        ) : (
+          <>
+            <ChartCard title="日別 AI試着回数（過去30日）">
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={tryonDaily}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ color: '#666', fontSize: '12px' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke={ACCENT}
+                    strokeWidth={2}
+                    dot={{ fill: ACCENT, r: 3 }}
+                    activeDot={{ r: 5 }}
+                    name="試着回数"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="月別 新規登録数（過去12ヶ月）">
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={regMonthly}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ color: '#666', fontSize: '12px' }}
+                  />
+                  <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="日別 クローゼット登録数（過去30日）">
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={closetDaily}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    labelStyle={{ color: '#666', fontSize: '12px' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke={ACCENT}
+                    strokeWidth={2}
+                    dot={{ fill: ACCENT, r: 3 }}
+                    activeDot={{ r: 5 }}
+                    name="登録数"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </>
+        )}
+
+        {/* ③ ユーザー一覧 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#888', margin: 0, letterSpacing: '0.08em' }}>
+            ユーザー一覧
+          </h2>
+          <span style={{ fontSize: '12px', color: '#bbb' }}>
+            全 {userCount.toLocaleString()} 件
+          </span>
+        </div>
+
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '20px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}>
+          {/* テーブル（横スクロール対応） */}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '13px',
+              minWidth: '600px',
+            }}>
+              <thead>
+                <tr style={{ background: '#FAFAFA', borderBottom: '1px solid #F0EAE3' }}>
+                  {['メールアドレス', '登録日', 'AI試着', '最終ログイン', 'ステータス', '操作'].map(h => (
+                    <th key={h} style={{
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: '#999',
+                      letterSpacing: '0.05em',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {userLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #F7F5F2' }}>
+                      {Array.from({ length: 6 }).map((_, j) => (
+                        <td key={j} style={{ padding: '14px 16px' }}>
+                          <div style={{
+                            height: '14px',
+                            background: '#F0EAE3',
+                            borderRadius: '6px',
+                            animation: 'pulse 1.5s ease-in-out infinite',
+                          }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#ccc' }}>
+                      ユーザーが見つかりません
+                    </td>
+                  </tr>
+                ) : (
+                  users.map(u => (
+                    <tr key={u.id} style={{
+                      borderBottom: '1px solid #F7F5F2',
+                      background: u.is_banned ? '#FFF8F7' : 'transparent',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!u.is_banned) e.currentTarget.style.background = '#FAFAF8' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = u.is_banned ? '#FFF8F7' : 'transparent' }}
+                    >
+                      <td style={{ padding: '13px 16px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#333', fontWeight: 500 }}>
+                        {u.email || '—'}
+                        {u.is_admin && (
+                          <span style={{
+                            marginLeft: '6px', fontSize: '10px', fontWeight: 700,
+                            background: '#FFF3E8', color: '#C8956C',
+                            padding: '2px 6px', borderRadius: '6px',
+                          }}>
+                            管理者
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
+                        {formatDate(u.created_at)}
+                      </td>
+                      <td style={{ padding: '13px 16px', color: '#333', fontWeight: 600, textAlign: 'center' }}>
+                        {u.tryon_count}
+                      </td>
+                      <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
+                        {formatDate(u.last_login_at)}
+                      </td>
+                      <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          background: u.is_banned ? '#FEE2E2' : '#F0FAF4',
+                          color:      u.is_banned ? '#B91C1C' : '#2D7D46',
+                        }}>
+                          {u.is_banned ? '停止中' : '有効'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {/* 停止/解除ボタン */}
+                          <button
+                            onClick={() => handleBan(u.id, u.is_banned)}
+                            disabled={!!actionLoading[`ban_${u.id}`] || u.is_admin}
+                            style={{
+                              padding: '5px 12px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: (actionLoading[`ban_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
+                              background: u.is_banned ? '#E8F5E9' : '#FFF3CD',
+                              color:      u.is_banned ? '#2E7D32' : '#856404',
+                              opacity: u.is_admin ? 0.4 : 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'opacity 0.15s',
+                            }}
+                          >
+                            {actionLoading[`ban_${u.id}`] ? <Spinner /> : (u.is_banned ? '解除' : '停止')}
+                          </button>
+
+                          {/* 削除ボタン */}
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            disabled={!!actionLoading[`del_${u.id}`] || u.is_admin}
+                            style={{
+                              padding: '5px 12px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: (actionLoading[`del_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
+                              background: '#FEE2E2',
+                              color: '#B91C1C',
+                              opacity: u.is_admin ? 0.4 : 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'opacity 0.15s',
+                            }}
+                          >
+                            {actionLoading[`del_${u.id}`] ? <Spinner /> : '削除'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ページネーション */}
+          {totalPages > 1 && (
+            <div style={{
+              padding: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              borderTop: '1px solid #F0EAE3',
+            }}>
+              <button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 0}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid #E8E0D8',
+                  background: '#FFFFFF',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: page === 0 ? '#ccc' : '#666',
+                  cursor: page === 0 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ← 前へ
+              </button>
+
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                const p = totalPages <= 7 ? i : Math.max(0, Math.min(page - 3, totalPages - 7)) + i
+                return (
+                  <button
+                    key={p}
+                    onClick={() => handlePageChange(p)}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: p === page ? ACCENT : '#F7F5F2',
+                      color: p === page ? '#FFFFFF' : '#666',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {p + 1}
+                  </button>
+                )
+              })}
+
+              <button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= totalPages - 1}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid #E8E0D8',
+                  background: '#FFFFFF',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: page >= totalPages - 1 ? '#ccc' : '#666',
+                  cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                次へ →
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ height: '40px' }} />
+      </div>
+
+      {/* トースト */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '32px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: toast.type === 'success' ? '#2D7D46' : '#B91C1C',
+          color: '#fff',
+          padding: '12px 24px',
+          borderRadius: '20px',
+          fontSize: '14px',
+          fontWeight: 600,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          animation: 'fadeInUp 0.3s ease',
+          whiteSpace: 'nowrap',
+        }}>
+          {toast.text}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
+    </div>
+  )
+}

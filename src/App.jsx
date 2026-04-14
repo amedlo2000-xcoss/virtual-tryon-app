@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { TryOnContext } from './context/TryOnContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
+import AdminRoute   from './components/AdminRoute'
 
 import Auth             from './pages/Auth'
 import AuthCallback      from './pages/AuthCallback'
@@ -15,6 +16,8 @@ import MyPage            from './pages/MyPage'
 import Closet            from './pages/Closet'
 import Coordinate        from './pages/Coordinate'
 import CoordinateResult  from './pages/CoordinateResult'
+import AdminLogin        from './pages/AdminLogin'
+import Admin             from './pages/Admin'
 
 function GlobalSpinner() {
   return (
@@ -75,6 +78,8 @@ function AppContent() {
           <Route path="/closet"             element={<PrivateRoute><Closet /></PrivateRoute>} />
           <Route path="/coordinate"         element={<PrivateRoute><Coordinate /></PrivateRoute>} />
           <Route path="/coordinate-result"  element={<PrivateRoute><CoordinateResult /></PrivateRoute>} />
+          <Route path="/admin-login"        element={<AdminLogin />} />
+          <Route path="/admin"              element={<AdminRoute><Admin /></AdminRoute>} />
         </Routes>
       </div>
     </TryOnContext.Provider>
