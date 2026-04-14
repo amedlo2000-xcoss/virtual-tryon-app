@@ -137,9 +137,10 @@ export default function Closet() {
                 key={item.id}
                 item={item}
                 isSelected={selectedClosetItem?.id === item.id}
-                onSelect={() => setSelectedClosetItem(
-                  selectedClosetItem?.id === item.id ? null : item
-                )}
+                onSelect={() => {
+                  setSelectedClosetItem(item)
+                  navigate('/coordinate')
+                }}
                 onDelete={() => handleDelete(item)}
               />
             ))}

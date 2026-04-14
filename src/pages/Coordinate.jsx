@@ -96,7 +96,7 @@ export default function Coordinate() {
             className="btn-primary"
             onClick={() => navigate('/closet')}
           >
-            クローゼットへ戻る
+            クローゼットから服を選ぶ
           </button>
         </div>
 
