@@ -3,28 +3,6 @@ import { supabase } from '../supabase'
 
 const AuthContext = createContext(null)
 
-const fullScreenSpinner = (
-  <div style={{
-    position: 'fixed',
-    inset: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#F7F5F2',
-    zIndex: 9999,
-  }}>
-    <div style={{
-      width: '44px',
-      height: '44px',
-      border: '4px solid #E8DDD5',
-      borderTop: '4px solid #C8956C',
-      borderRadius: '50%',
-      animation: 'auth-spin 0.8s linear infinite',
-    }} />
-    <style>{`@keyframes auth-spin { to { transform: rotate(360deg); } }`}</style>
-  </div>
-)
-
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +26,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, signOut }}>
-      {loading ? fullScreenSpinner : children}
+      {children}
     </AuthContext.Provider>
   )
 }

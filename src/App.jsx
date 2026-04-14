@@ -13,6 +13,30 @@ import UploadClothes from './pages/UploadClothes'
 import Result        from './pages/Result'
 import MyPage        from './pages/MyPage'
 
+function GlobalSpinner() {
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#F7F5F2',
+      zIndex: 9999,
+    }}>
+      <div style={{
+        width: '44px',
+        height: '44px',
+        border: '4px solid #E8DDD5',
+        borderTop: '4px solid #C8956C',
+        borderRadius: '50%',
+        animation: 'auth-spin 0.8s linear infinite',
+      }} />
+      <style>{`@keyframes auth-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
 function AppContent() {
   const { loading } = useAuth()
   const [bodyData, setBodyData] = useState({
@@ -21,29 +45,7 @@ function AppContent() {
   const [userImage, setUserImage]       = useState(null)
   const [clothesImage, setClothesImage] = useState(null)
 
-  if (loading) {
-    return (
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#F7F5F2',
-        zIndex: 9999,
-      }}>
-        <div style={{
-          width: '44px',
-          height: '44px',
-          border: '4px solid #E8DDD5',
-          borderTop: '4px solid #C8956C',
-          borderRadius: '50%',
-          animation: 'auth-spin 0.8s linear infinite',
-        }} />
-        <style>{`@keyframes auth-spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <GlobalSpinner />
 
   return (
     <TryOnContext.Provider value={{
