@@ -26,26 +26,26 @@ export default function Home() {
         <p style={{ fontSize: '13px', color: '#C8956C', fontWeight: 600, letterSpacing: '0.1em' }}>
           VIRTUAL TRY-ON
         </p>
-        {user && (
-          <button
-            onClick={handleSignOut}
-            style={{
-              position: 'absolute',
-              top: '4px',
-              right: 0,
-              background: 'none',
-              border: '1.5px solid #E8E0D8',
-              borderRadius: '20px',
-              padding: '6px 14px',
-              fontSize: '12px',
-              color: '#999',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            ログアウト
-          </button>
-        )}
+        <button
+          onClick={handleSignOut}
+          style={{
+            position: 'absolute',
+            top: '4px',
+            right: 0,
+            background: 'none',
+            border: '1.5px solid #E8E0D8',
+            borderRadius: '20px',
+            padding: '6px 14px',
+            fontSize: '12px',
+            color: '#999',
+            cursor: 'pointer',
+            fontWeight: 600,
+            visibility: user ? 'visible' : 'hidden',
+            pointerEvents: user ? 'auto' : 'none',
+          }}
+        >
+          ログアウト
+        </button>
       </div>
 
       {/* メインバナーカード */}
