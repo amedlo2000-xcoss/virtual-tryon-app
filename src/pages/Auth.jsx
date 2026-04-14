@@ -33,6 +33,10 @@ export default function Auth() {
       if (error) {
         setMessage({ type: 'error', text: error.message })
       } else {
+        // 自動確認の場合もセッションを破棄して確認メッセージを表示する
+        await supabase.auth.signOut()
+        setEmail('')
+        setPassword('')
         setMessage({ type: 'success', text: '確認メールを送信しました。メールをご確認ください。' })
       }
     } else {
@@ -113,6 +117,7 @@ export default function Auth() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="example@email.com"
+                autoComplete="off"
                 style={{
                   width: '100%',
                   padding: '12px 14px',
@@ -142,6 +147,7 @@ export default function Auth() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="6文字以上"
+                autoComplete="new-password"
                 style={{
                   width: '100%',
                   padding: '12px 14px',

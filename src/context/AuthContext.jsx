@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { supabase } from '../supabase'
 
 const AuthContext = createContext(null)
@@ -16,7 +17,7 @@ async function forceSignOut(setUser) {
   } catch (_) {
     // signOut itself may fail if token is already invalid — ignore
   }
-  setUser(null)
+  flushSync(() => setUser(null))
 }
 
 export function AuthProvider({ children }) {

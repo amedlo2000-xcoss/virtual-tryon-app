@@ -7,7 +7,9 @@
       "Bash(git push:*)",
       "Bash(curl -s http://localhost:5173)",
       "Bash(npm install:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(jobs)",
+      "Bash(kill %1)"
     ]
   }
 }
