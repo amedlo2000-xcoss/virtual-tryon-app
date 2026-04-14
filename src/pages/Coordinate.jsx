@@ -4,6 +4,22 @@ import { supabase } from '../supabase'
 import { useTryOn } from '../context/TryOnContext'
 import NavButtons from '../components/NavButtons'
 
+const CATEGORIES = [
+  { label: 'トップス', fashn: 'tops' },
+  { label: 'アウター', fashn: 'tops' },
+  { label: 'ボトムス', fashn: 'bottoms' },
+  { label: 'スカート', fashn: 'bottoms' },
+  { label: 'ワンピース', fashn: 'one-pieces' },
+  { label: 'オールインワン', fashn: 'one-pieces' },
+  { label: 'セットアップ', fashn: 'one-pieces' },
+]
+
+const BADGE_COLORS = {
+  tops: { bg: '#EBF4FF', color: '#2D6EA6' },
+  bottoms: { bg: '#F0EBFF', color: '#6B42C8' },
+  'one-pieces': { bg: '#FFF0EB', color: '#C85A28' },
+}
+
 function resizeImage(file, maxSize = 1024) {
   return new Promise((resolve) => {
     const img = new Image()
@@ -31,9 +47,28 @@ function resizeImage(file, maxSize = 1024) {
   })
 }
 
+function CategoryBadge({ fashnCategory, label }) {
+  const badge = BADGE_COLORS[fashnCategory]
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: '20px',
+      fontSize: '10px',
+      fontWeight: 700,
+      background: badge?.bg || '#F0F0F0',
+      color: badge?.color || '#666',
+      lineHeight: 1.6,
+    }}>
+      {label}
+    </span>
+  )
+}
+
 export default function Coordinate() {
   const { selectedClosetItem, setCombinedOutfit } = useTryOn()
   const [newClothesImage, setNewClothesImage] = useState(null)
+  const [selectedNewCategory, setSelectedNewCategory] = useState(CATEGORIES[0])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const inputRef = useRef(null)
@@ -46,10 +81,8 @@ export default function Coordinate() {
     setUploadError(null)
     try {
       const resized = await resizeImage(file)
-      // ローカルプレビューを先に表示
       const localUrl = URL.createObjectURL(resized)
       setNewClothesImage(localUrl)
-      // Supabase Storageにアップロードして公開URLを取得
       const fileName = `coordinate_${Date.now()}.jpg`
       const { error } = await supabase.storage
         .from('tryon-images')
@@ -72,8 +105,10 @@ export default function Coordinate() {
 
   const handleTryOn = () => {
     setCombinedOutfit({
-      closetItem: selectedClosetItem,
-      newClothes: newClothesImage,
+      closetImage: selectedClosetItem.image_url,
+      closetFashnCategory: selectedClosetItem.fashn_category || 'tops',
+      newClothesImage,
+      newClothesFashnCategory: selectedNewCategory.fashn,
     })
     navigate('/coordinate-result')
   }
@@ -140,10 +175,10 @@ export default function Coordinate() {
 
       <div className="page-content">
         {/* 左右レイアウト */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
 
           {/* 左: クローゼットから選択した服 */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <p style={{
               fontSize: '11px',
               fontWeight: '600',
@@ -189,13 +224,22 @@ export default function Coordinate() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              width: '100%',
             }}>
               {selectedClosetItem.name}
             </p>
+            {selectedClosetItem.category && selectedClosetItem.fashn_category && (
+              <div style={{ marginTop: '4px' }}>
+                <CategoryBadge
+                  fashnCategory={selectedClosetItem.fashn_category}
+                  label={selectedClosetItem.category}
+                />
+              </div>
+            )}
           </div>
 
           {/* 右: 新しい服をアップロード */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <p style={{
               fontSize: '11px',
               fontWeight: '600',
@@ -263,6 +307,40 @@ export default function Coordinate() {
             }}>
               {newClothesImage ? 'タップで変更' : '画像をアップロード'}
             </p>
+          </div>
+        </div>
+
+        {/* 新しい服のカテゴリ選択 */}
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '20px',
+          padding: '14px 16px',
+          marginBottom: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 700, color: '#666', marginBottom: '10px' }}>
+            新しい服のカテゴリ
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.label}
+                onClick={() => setSelectedNewCategory(cat)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: selectedNewCategory?.label === cat.label ? 'none' : '1px solid #ddd',
+                  background: selectedNewCategory?.label === cat.label ? '#C8956C' : '#F7F5F2',
+                  color: selectedNewCategory?.label === cat.label ? '#FFFFFF' : '#333333',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
         </div>
 
