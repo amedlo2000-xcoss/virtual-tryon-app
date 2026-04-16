@@ -10,7 +10,7 @@ export default function AdminRoute() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (loading) return  // AuthContextの初期化を待つ（SIGNED_IN処理前にリダイレクトしない）
+    if (loading) return
     if (!user) {
       setChecking(false)
       startTransition(() => navigate('/admin-login', { replace: true }))
@@ -54,3 +54,4 @@ export default function AdminRoute() {
   if (!isAdmin) return null
 
   return <Outlet />
+}

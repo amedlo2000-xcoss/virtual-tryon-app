@@ -43,7 +43,7 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
@@ -108,7 +108,10 @@ export default function AdminLogin() {
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id)
 
-    navigate('/admin', { replace: true })
+    setLoading(false)
+    startTransition(() => {
+      navigate('/admin', { replace: true })
+    })
   }
 
   return (
@@ -178,7 +181,7 @@ export default function AdminLogin() {
                 name="email"
                 type="email"
                 required
-                autoComplete="email"
+                autoComplete="username"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@example.com"
@@ -234,7 +237,7 @@ export default function AdminLogin() {
               }}
             >
               {loading && (
-                <span style={{
+                <div style={{
                   width: '16px',
                   height: '16px',
                   border: '2px solid rgba(255,255,255,0.4)',
