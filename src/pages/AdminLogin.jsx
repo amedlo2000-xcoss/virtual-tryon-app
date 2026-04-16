@@ -167,7 +167,7 @@ export default function AdminLogin() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="off">
             {/* メール */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{
