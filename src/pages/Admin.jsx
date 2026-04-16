@@ -17,6 +17,22 @@
  *
  * 現実装: is_banned = true のソフトデリートのみ対応。
  * ────────────────────────────────────────────────────────────────────────────
+ *
+ * ── Supabase で実行が必要な SQL ──────────────────────────────────────────────
+ * profiles テーブルの RLS を管理者が全件参照できるよう変更してください:
+ *
+ *   DROP POLICY IF EXISTS "自分のデータのみ参照" ON profiles;
+ *   CREATE POLICY "自分または管理者が参照可能"
+ *   ON profiles FOR SELECT
+ *   USING (
+ *     auth.uid() = id OR
+ *     EXISTS (
+ *       SELECT 1 FROM profiles p
+ *       WHERE p.id = auth.uid() AND p.is_admin = true
+ *     )
+ *   );
+ *
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -66,18 +82,20 @@ function KpiCard({ label, value, loading }) {
       <p style={{ fontSize: '11px', color: '#999', fontWeight: 600, margin: '0 0 8px', letterSpacing: '0.05em' }}>
         {label}
       </p>
-      {loading ? (
+      <div style={{ display: loading ? 'block' : 'none' }}>
         <div style={{
           height: '32px',
           background: '#F0EAE3',
           borderRadius: '8px',
           animation: 'pulse 1.5s ease-in-out infinite',
         }} />
-      ) : (
-        <p style={{ fontSize: '28px', fontWeight: 800, color: '#333', margin: 0, lineHeight: 1 }}>
-          {value?.toLocaleString() ?? '—'}
-        </p>
-      )}
+      </div>
+      <p style={{
+        display: loading ? 'none' : 'block',
+        fontSize: '28px', fontWeight: 800, color: '#333', margin: 0, lineHeight: 1,
+      }}>
+        {value?.toLocaleString() ?? '—'}
+      </p>
     </div>
   )
 }
@@ -156,7 +174,8 @@ export default function Admin() {
         .gte('created_at', todayStart.toISOString()),
       supabase.from('profiles').select('*', { count: 'exact', head: true })
         .gte('created_at', monthStart.toISOString()),
-      supabase.from('tryon_results').select('*', { count: 'exact', head: true }),
+      // AI試着回数は tryon_sessions テーブルから取得
+      supabase.from('tryon_sessions').select('*', { count: 'exact', head: true }),
       supabase.from('closet_items').select('*', { count: 'exact', head: true }),
       supabase.from('profiles').select('*', { count: 'exact', head: true })
         .gte('last_login_at', week7ago),
@@ -184,7 +203,8 @@ export default function Admin() {
     })
 
     const [tryonRes, regRes, closetRes] = await Promise.all([
-      supabase.from('tryon_results').select('created_at').gte('created_at', daysAgo(30)),
+      // AI試着グラフは tryon_sessions テーブルから取得
+      supabase.from('tryon_sessions').select('created_at').gte('created_at', daysAgo(30)),
       supabase.from('profiles').select('created_at').gte('created_at', monthsAgo(12)),
       supabase.from('closet_items').select('created_at').gte('created_at', daysAgo(30)),
     ])
@@ -227,10 +247,10 @@ export default function Admin() {
       .range(from, to)
 
     if (!error) {
-      // AI試着回数を結合
+      // AI試着回数を tryon_sessions テーブルから結合
       const userIds = (data || []).map(u => u.id)
       const { data: tryonCounts } = await supabase
-        .from('tryon_results')
+        .from('tryon_sessions')
         .select('user_id')
         .in('user_id', userIds)
 
@@ -282,13 +302,13 @@ export default function Admin() {
      * ⚠️ supabase.auth.admin.deleteUser() にはサービスロールキーが必要です。
      * フロントエンドでの直接呼び出しはセキュリティリスクがあるため、
      * 本番環境では Supabase Edge Function を経由してください。
-     * 現状は profiles テーブルの is_banned = true に設定し、
-     * closet_items・tryon_results を削除するソフトデリートを行います。
+     * 現状は profiles テーブルを削除し、
+     * closet_items・tryon_sessions を削除するソフトデリートを行います。
      */
     const [p1, p2, p3] = await Promise.all([
       supabase.from('profiles').delete().eq('id', userId),
       supabase.from('closet_items').delete().eq('user_id', userId),
-      supabase.from('tryon_results').delete().eq('user_id', userId),
+      supabase.from('tryon_sessions').delete().eq('user_id', userId),
     ])
 
     if (p1.error) {
@@ -381,84 +401,84 @@ export default function Admin() {
           グラフ
         </h2>
 
-        {graphLoading ? (
-          <div style={{
-            background: '#FFFFFF',
-            borderRadius: '20px',
-            height: '200px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px',
-            color: '#ccc',
-            fontSize: '13px',
-          }}>
-            グラフを読み込み中...
-          </div>
-        ) : (
-          <>
-            <ChartCard title="日別 AI試着回数（過去30日）">
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={tryonDaily}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    labelStyle={{ color: '#666', fontSize: '12px' }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke={ACCENT}
-                    strokeWidth={2}
-                    dot={{ fill: ACCENT, r: 3 }}
-                    activeDot={{ r: 5 }}
-                    name="試着回数"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartCard>
+        {/* ローディング表示 (display:none で制御) */}
+        <div style={{
+          display: graphLoading ? 'flex' : 'none',
+          background: '#FFFFFF',
+          borderRadius: '20px',
+          height: '200px',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '16px',
+          color: '#ccc',
+          fontSize: '13px',
+        }}>
+          グラフを読み込み中...
+        </div>
 
-            <ChartCard title="月別 新規登録数（過去12ヶ月）">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={regMonthly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    labelStyle={{ color: '#666', fontSize: '12px' }}
-                  />
-                  <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+        {/* グラフ本体 (display:none で制御) */}
+        <div style={{ display: graphLoading ? 'none' : 'block' }}>
+          <ChartCard title="日別 AI試着回数（過去30日）">
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={tryonDaily}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  labelStyle={{ color: '#666', fontSize: '12px' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke={ACCENT}
+                  strokeWidth={2}
+                  dot={{ fill: ACCENT, r: 3 }}
+                  activeDot={{ r: 5 }}
+                  name="試着回数"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
-            <ChartCard title="日別 クローゼット登録数（過去30日）">
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={closetDaily}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                  <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                    labelStyle={{ color: '#666', fontSize: '12px' }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke={ACCENT}
-                    strokeWidth={2}
-                    dot={{ fill: ACCENT, r: 3 }}
-                    activeDot={{ r: 5 }}
-                    name="登録数"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          </>
-        )}
+          <ChartCard title="月別 新規登録数（過去12ヶ月）">
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={regMonthly}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  labelStyle={{ color: '#666', fontSize: '12px' }}
+                />
+                <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="日別 クローゼット登録数（過去30日）">
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={closetDaily}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  labelStyle={{ color: '#666', fontSize: '12px' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke={ACCENT}
+                  strokeWidth={2}
+                  dot={{ fill: ACCENT, r: 3 }}
+                  activeDot={{ r: 5 }}
+                  name="登録数"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
 
         {/* ③ ユーザー一覧 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0' }}>
@@ -502,123 +522,125 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {userLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #F7F5F2' }}>
-                      {Array.from({ length: 6 }).map((_, j) => (
-                        <td key={j} style={{ padding: '14px 16px' }}>
-                          <div style={{
-                            height: '14px',
-                            background: '#F0EAE3',
-                            borderRadius: '6px',
-                            animation: 'pulse 1.5s ease-in-out infinite',
-                          }} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#ccc' }}>
-                      ユーザーが見つかりません
+                {/* ローディングスケルトン行 (display:none で制御) */}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skel-${i}`} style={{ display: userLoading ? '' : 'none', borderBottom: '1px solid #F7F5F2' }}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} style={{ padding: '14px 16px' }}>
+                        <div style={{
+                          height: '14px',
+                          background: '#F0EAE3',
+                          borderRadius: '6px',
+                          animation: 'pulse 1.5s ease-in-out infinite',
+                        }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {/* 空状態 (display:none で制御) */}
+                <tr style={{ display: (!userLoading && users.length === 0) ? '' : 'none' }}>
+                  <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#ccc' }}>
+                    ユーザーが見つかりません
+                  </td>
+                </tr>
+
+                {/* データ行 (display:none で制御) */}
+                {users.map(u => (
+                  <tr key={u.id} style={{
+                    display: userLoading ? 'none' : '',
+                    borderBottom: '1px solid #F7F5F2',
+                    background: u.is_banned ? '#FFF8F7' : 'transparent',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!u.is_banned) e.currentTarget.style.background = '#FAFAF8' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = u.is_banned ? '#FFF8F7' : 'transparent' }}
+                  >
+                    <td style={{ padding: '13px 16px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#333', fontWeight: 500 }}>
+                      {u.email || '—'}
+                      {u.is_admin && (
+                        <span style={{
+                          marginLeft: '6px', fontSize: '10px', fontWeight: 700,
+                          background: '#FFF3E8', color: '#C8956C',
+                          padding: '2px 6px', borderRadius: '6px',
+                        }}>
+                          管理者
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
+                      {formatDate(u.created_at)}
+                    </td>
+                    <td style={{ padding: '13px 16px', color: '#333', fontWeight: 600, textAlign: 'center' }}>
+                      {u.tryon_count}
+                    </td>
+                    <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
+                      {formatDate(u.last_login_at)}
+                    </td>
+                    <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '3px 10px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: u.is_banned ? '#FEE2E2' : '#F0FAF4',
+                        color:      u.is_banned ? '#B91C1C' : '#2D7D46',
+                      }}>
+                        {u.is_banned ? '停止中' : '有効'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {/* 停止/解除ボタン */}
+                        <button
+                          onClick={() => handleBan(u.id, u.is_banned)}
+                          disabled={!!actionLoading[`ban_${u.id}`] || u.is_admin}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: (actionLoading[`ban_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
+                            background: u.is_banned ? '#E8F5E9' : '#FFF3CD',
+                            color:      u.is_banned ? '#2E7D32' : '#856404',
+                            opacity: u.is_admin ? 0.4 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'opacity 0.15s',
+                          }}
+                        >
+                          {actionLoading[`ban_${u.id}`] ? <Spinner /> : (u.is_banned ? '解除' : '停止')}
+                        </button>
+
+                        {/* 削除ボタン */}
+                        <button
+                          onClick={() => handleDelete(u.id)}
+                          disabled={!!actionLoading[`del_${u.id}`] || u.is_admin}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: (actionLoading[`del_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
+                            background: '#FEE2E2',
+                            color: '#B91C1C',
+                            opacity: u.is_admin ? 0.4 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'opacity 0.15s',
+                          }}
+                        >
+                          {actionLoading[`del_${u.id}`] ? <Spinner /> : '削除'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  users.map(u => (
-                    <tr key={u.id} style={{
-                      borderBottom: '1px solid #F7F5F2',
-                      background: u.is_banned ? '#FFF8F7' : 'transparent',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!u.is_banned) e.currentTarget.style.background = '#FAFAF8' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = u.is_banned ? '#FFF8F7' : 'transparent' }}
-                    >
-                      <td style={{ padding: '13px 16px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#333', fontWeight: 500 }}>
-                        {u.email || '—'}
-                        {u.is_admin && (
-                          <span style={{
-                            marginLeft: '6px', fontSize: '10px', fontWeight: 700,
-                            background: '#FFF3E8', color: '#C8956C',
-                            padding: '2px 6px', borderRadius: '6px',
-                          }}>
-                            管理者
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
-                        {formatDate(u.created_at)}
-                      </td>
-                      <td style={{ padding: '13px 16px', color: '#333', fontWeight: 600, textAlign: 'center' }}>
-                        {u.tryon_count}
-                      </td>
-                      <td style={{ padding: '13px 16px', color: '#888', whiteSpace: 'nowrap' }}>
-                        {formatDate(u.last_login_at)}
-                      </td>
-                      <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '3px 10px',
-                          borderRadius: '20px',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          background: u.is_banned ? '#FEE2E2' : '#F0FAF4',
-                          color:      u.is_banned ? '#B91C1C' : '#2D7D46',
-                        }}>
-                          {u.is_banned ? '停止中' : '有効'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {/* 停止/解除ボタン */}
-                          <button
-                            onClick={() => handleBan(u.id, u.is_banned)}
-                            disabled={!!actionLoading[`ban_${u.id}`] || u.is_admin}
-                            style={{
-                              padding: '5px 12px',
-                              borderRadius: '12px',
-                              border: 'none',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: (actionLoading[`ban_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
-                              background: u.is_banned ? '#E8F5E9' : '#FFF3CD',
-                              color:      u.is_banned ? '#2E7D32' : '#856404',
-                              opacity: u.is_admin ? 0.4 : 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'opacity 0.15s',
-                            }}
-                          >
-                            {actionLoading[`ban_${u.id}`] ? <Spinner /> : (u.is_banned ? '解除' : '停止')}
-                          </button>
-
-                          {/* 削除ボタン */}
-                          <button
-                            onClick={() => handleDelete(u.id)}
-                            disabled={!!actionLoading[`del_${u.id}`] || u.is_admin}
-                            style={{
-                              padding: '5px 12px',
-                              borderRadius: '12px',
-                              border: 'none',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: (actionLoading[`del_${u.id}`] || u.is_admin) ? 'not-allowed' : 'pointer',
-                              background: '#FEE2E2',
-                              color: '#B91C1C',
-                              opacity: u.is_admin ? 0.4 : 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'opacity 0.15s',
-                            }}
-                          >
-                            {actionLoading[`del_${u.id}`] ? <Spinner /> : '削除'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
