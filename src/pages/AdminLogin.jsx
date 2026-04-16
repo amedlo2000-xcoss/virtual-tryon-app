@@ -174,8 +174,11 @@ export default function AdminLogin() {
                 メールアドレス
               </label>
               <input
+                id="admin-email"
+                name="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@example.com"
@@ -194,9 +197,12 @@ export default function AdminLogin() {
                 パスワード
               </label>
               <input
+                id="admin-password"
+                name="password"
                 type="password"
                 required
                 minLength={6}
+                autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"

@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, startTransition } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 
 export default function AdminRoute() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
   const [isAdmin, setIsAdmin] = useState(null)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
+    if (loading) return  // AuthContextの初期化を待つ（SIGNED_IN処理前にリダイレクトしない）
     if (!user) {
-      navigate('/admin-login', { replace: true })
       setChecking(false)
+      startTransition(() => navigate('/admin-login', { replace: true }))
       return
     }
     supabase
@@ -21,23 +22,17 @@ export default function AdminRoute() {
       .eq('id', user.id)
       .single()
       .then(({ data, error }) => {
-        if (error) {
-          console.error('AdminRoute: profiles取得エラー', error)
+        if (error || !data?.is_admin) {
           setIsAdmin(false)
-          // signOut は呼ばない — /admin-login にリダイレクトするだけ
-          navigate('/admin-login', { replace: true })
-        } else if (!data?.is_admin) {
-          setIsAdmin(false)
-          // signOut は呼ばない — /admin-login にリダイレクトするだけ
-          navigate('/admin-login', { replace: true })
+          startTransition(() => navigate('/admin-login', { replace: true }))
         } else {
           setIsAdmin(true)
         }
         setChecking(false)
       })
-  }, [user, navigate])
+  }, [user, loading, navigate])
 
-  if (checking) {
+  if (loading || checking) {
     return (
       <div style={{
         position: 'fixed', inset: 0,
@@ -59,4 +54,3 @@ export default function AdminRoute() {
   if (!isAdmin) return null
 
   return <Outlet />
-}

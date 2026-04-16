@@ -10,11 +10,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[AuthContext] onAuthStateChange event:', event, 'user:', session?.user?.id ?? null)
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        setUser(session?.user ?? null)
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
-      }
+      setUser(session?.user ?? null)
       setLoading(false)
     })
     return () => subscription.unsubscribe()
