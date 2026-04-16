@@ -57,7 +57,17 @@ export default function Home() {
         marginBottom: '20px',
         boxShadow: '0 4px 20px rgba(200, 149, 108, 0.2)',
       }}>
-        <div style={{ fontSize: '64px', marginBottom: '16px' }}>👗</div>
+        <img
+          src="/miron-hero.png"
+          alt="Miron hero"
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            display: 'block',
+            margin: '0 auto 24px',
+            objectFit: 'contain',
+          }}
+        />
         <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#333', marginBottom: '8px' }}>
           着た自分を、買う前に見る
         </h2>
