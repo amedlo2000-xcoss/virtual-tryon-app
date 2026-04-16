@@ -51,21 +51,6 @@ function formatDate(iso) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-function daysAgo(n) {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString()
-}
-
-function monthsAgo(n) {
-  const d = new Date()
-  d.setMonth(d.getMonth() - n)
-  d.setDate(1)
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString()
-}
-
 // ─── サブコンポーネント ───────────────────────────────────────────────────────
 function KpiCard({ label, value, loading }) {
   return (
@@ -96,23 +81,6 @@ function KpiCard({ label, value, loading }) {
   )
 }
 
-function ChartCard({ title, children }) {
-  return (
-    <div style={{
-      background: '#FFFFFF',
-      borderRadius: '20px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-      padding: '20px',
-      marginBottom: '16px',
-    }}>
-      <p style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 16px' }}>
-        {title}
-      </p>
-      {children}
-    </div>
-  )
-}
-
 function Spinner() {
   return (
     <span style={{
@@ -135,13 +103,6 @@ export default function Admin() {
   // KPI
   const [kpi, setKpi]           = useState({})
   const [kpiLoading, setKpiLoading] = useState(true)
-
-  // グラフ
-  const [tryonDaily, setTryonDaily]     = useState([])
-  const [regMonthly, setRegMonthly]     = useState([])
-  const [closetDaily, setClosetDaily]   = useState([])
-  const [graphLoading, setGraphLoading] = useState(true)
-  const [RechartsComponents, setRechartsComponents] = useState(null)
 
   // ユーザー一覧
   const [users, setUsers]         = useState([])
@@ -182,56 +143,6 @@ export default function Admin() {
     setKpiLoading(false)
   }, [])
 
-  const loadGraphs = useCallback(async () => {
-    setGraphLoading(true)
-
-    // 過去30日の日別ラベル
-    const days30 = Array.from({ length: 30 }, (_, i) => {
-      const d = new Date()
-      d.setDate(d.getDate() - (29 - i))
-      return d.toISOString().slice(0, 10)
-    })
-
-    // 過去12ヶ月のラベル
-    const months12 = Array.from({ length: 12 }, (_, i) => {
-      const d = new Date()
-      d.setMonth(d.getMonth() - (11 - i))
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    })
-
-    const [tryonRes, regRes, closetRes] = await Promise.all([
-      // AI試着グラフは tryon_sessions テーブルから取得
-      supabase.from('tryon_sessions').select('created_at').gte('created_at', daysAgo(30)),
-      supabase.from('profiles').select('created_at').gte('created_at', monthsAgo(12)),
-      supabase.from('closet_items').select('created_at').gte('created_at', daysAgo(30)),
-    ])
-
-    // 日別集計ヘルパー
-    const countByDay = (rows) => {
-      const map = {}
-      ;(rows || []).forEach(r => {
-        const day = r.created_at?.slice(0, 10)
-        if (day) map[day] = (map[day] || 0) + 1
-      })
-      return days30.map(d => ({ date: d.slice(5), count: map[d] || 0 }))
-    }
-
-    // 月別集計ヘルパー
-    const countByMonth = (rows) => {
-      const map = {}
-      ;(rows || []).forEach(r => {
-        const mo = r.created_at?.slice(0, 7)
-        if (mo) map[mo] = (map[mo] || 0) + 1
-      })
-      return months12.map(m => ({ month: m.slice(5) + '月', count: map[m] || 0 }))
-    }
-
-    setTryonDaily(countByDay(tryonRes.data))
-    setRegMonthly(countByMonth(regRes.data))
-    setClosetDaily(countByDay(closetRes.data))
-    setGraphLoading(false)
-  }, [])
-
   const loadUsers = useCallback(async (pg = 0) => {
     setUserLoading(true)
     const from = pg * PAGE_SIZE
@@ -251,16 +162,9 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    import('recharts').then((mod) => {
-      setRechartsComponents(mod)
-    })
-  }, [])
-
-  useEffect(() => {
     loadKpi()
-    loadGraphs()
     loadUsers(0)
-  }, [loadKpi, loadGraphs, loadUsers])
+  }, [loadKpi, loadUsers])
 
   // ─── ユーザー操作 ───────────────────────────────────────────────────────────
   const showToast = (type, text) => {
@@ -323,10 +227,6 @@ export default function Admin() {
   }
 
   const totalPages = Math.ceil(userCount / PAGE_SIZE)
-  const {
-    LineChart, Line, BarChart, Bar,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  } = RechartsComponents ?? {}
 
   // ─── レンダリング ────────────────────────────────────────────────────────────
   return (
@@ -396,92 +296,17 @@ export default function Admin() {
           グラフ
         </h2>
 
-        {/* ローディング表示 (display:none で制御) */}
         <div style={{
-          display: graphLoading ? 'flex' : 'none',
           background: '#FFFFFF',
           borderRadius: '20px',
-          height: '200px',
-          alignItems: 'center',
-          justifyContent: 'center',
+          padding: '24px',
           marginBottom: '16px',
-          color: '#ccc',
+          textAlign: 'center',
+          color: '#bbb',
           fontSize: '13px',
         }}>
-          グラフを読み込み中...
+          グラフ機能は準備中です
         </div>
-
-        {/* グラフ本体 */}
-        {!graphLoading && (
-          RechartsComponents === null ? (
-            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
-              読み込み中...
-            </div>
-          ) : (
-            <>
-              <ChartCard title="日別 AI試着回数（過去30日）">
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={tryonDaily}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ color: '#666', fontSize: '12px' }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke={ACCENT}
-                      strokeWidth={2}
-                      dot={{ fill: ACCENT, r: 3 }}
-                      activeDot={{ r: 5 }}
-                      name="試着回数"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="月別 新規登録数（過去12ヶ月）">
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={regMonthly}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
-                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ color: '#666', fontSize: '12px' }}
-                    />
-                    <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="日別 クローゼット登録数（過去30日）">
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={closetDaily}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ color: '#666', fontSize: '12px' }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke={ACCENT}
-                      strokeWidth={2}
-                      dot={{ fill: ACCENT, r: 3 }}
-                      activeDot={{ r: 5 }}
-                      name="登録数"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </>
-          )
-        )}
 
         {/* ③ ユーザー一覧 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0' }}>
