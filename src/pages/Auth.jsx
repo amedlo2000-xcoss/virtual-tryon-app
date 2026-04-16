@@ -35,7 +35,14 @@ export default function Auth() {
 
       if (error) {
         console.error('[Auth] signUp エラー:', error.message, error.status)
-        setMessage({ type: 'error', text: `登録に失敗しました: ${error.message}` })
+        const msg = error.message ?? ''
+        if (msg.includes('User already registered') || msg.includes('already registered')) {
+          setMessage({ type: 'error', text: 'このメールアドレスはすでに登録されています。ログインしてください。' })
+          setMode('login')
+          setPassword('')
+        } else {
+          setMessage({ type: 'error', text: `登録に失敗しました: ${msg}` })
+        }
       } else if (data.session) {
         // メール確認不要（auto-confirm ON）→ そのままホームへ遷移
         console.log('[Auth] signUp 自動確認済み, user:', data.user?.id, '→ / へ遷移')
@@ -117,20 +124,19 @@ export default function Auth() {
             {mode === 'login' ? 'ログイン' : '新規登録'}
           </h2>
 
-          {/* メッセージ */}
-          {message && (
-            <div style={{
-              padding: '12px 16px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              fontSize: '13px',
-              background: message.type === 'success' ? '#F0FAF4' : '#FEF2F2',
-              color:      message.type === 'success' ? '#2D7D46' : '#B91C1C',
-              border:     `1px solid ${message.type === 'success' ? '#BBF7D0' : '#FECACA'}`,
-            }}>
-              {message.text}
-            </div>
-          )}
+          {/* メッセージ (display:none方式でDOM安定) */}
+          <div style={{
+            display: message ? 'block' : 'none',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontSize: '13px',
+            background: message?.type === 'success' ? '#F0FAF4' : '#FEF2F2',
+            color:      message?.type === 'success' ? '#2D7D46' : '#B91C1C',
+            border:     `1px solid ${message?.type === 'success' ? '#BBF7D0' : '#FECACA'}`,
+          }}>
+            {message?.text ?? ''}
+          </div>
 
           <form onSubmit={handleSubmit}>
             {/* メール */}
@@ -213,17 +219,15 @@ export default function Auth() {
                 gap: '8px',
               }}
             >
-              {loading && (
-                <span style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid rgba(255,255,255,0.4)',
-                  borderTop: '2px solid #fff',
-                  borderRadius: '50%',
-                  display: 'inline-block',
-                  animation: 'spin 0.8s linear infinite',
-                }} />
-              )}
+              <span style={{
+                display: loading ? 'inline-block' : 'none',
+                width: '16px',
+                height: '16px',
+                border: '2px solid rgba(255,255,255,0.4)',
+                borderTop: '2px solid #fff',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }} />
               {mode === 'login' ? 'ログイン' : '登録する'}
             </button>
           </form>
