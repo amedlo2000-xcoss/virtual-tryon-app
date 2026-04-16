@@ -247,19 +247,7 @@ export default function Admin() {
       .range(from, to)
 
     if (!error) {
-      // AI試着回数を tryon_sessions テーブルから結合
-      const userIds = (data || []).map(u => u.id)
-      const { data: tryonCounts } = await supabase
-        .from('tryon_sessions')
-        .select('user_id')
-        .in('user_id', userIds)
-
-      const countMap = {}
-      ;(tryonCounts || []).forEach(r => {
-        countMap[r.user_id] = (countMap[r.user_id] || 0) + 1
-      })
-
-      setUsers((data || []).map(u => ({ ...u, tryon_count: countMap[u.id] || 0 })))
+      setUsers((data || []).map(u => ({ ...u, tryon_count: 0 })))
       setUserCount(count || 0)
     }
     setUserLoading(false)
