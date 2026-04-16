@@ -1,21 +1,6 @@
 import NavButtons from '../components/NavButtons'
+import StepIndicator from '../components/StepIndicator'
 import { useTryOn } from '../context/TryOnContext'
-
-function ProgressBar({ current, total }) {
-  return (
-    <div className="progress-bar">
-      {Array.from({ length: total }, (_, i) => {
-        const s = i + 1
-        return (
-          <div
-            key={i}
-            className={`progress-step ${s < current ? 'done' : s === current ? 'active' : ''}`}
-          />
-        )
-      })}
-    </div>
-  )
-}
 
 export default function BodyInput() {
   const { bodyData, setBodyData } = useTryOn()
@@ -35,10 +20,8 @@ export default function BodyInput() {
 
   return (
     <div className="page">
-      <ProgressBar current={1} total={4} />
-
       <div className="page-header">
-        <p className="step-label">Step 1 / 4</p>
+        <StepIndicator current={1} total={4} />
         <h1 className="page-title">体型情報の入力</h1>
         <p className="page-desc">
           分かる範囲だけ入力してください。<br />
@@ -50,7 +33,7 @@ export default function BodyInput() {
 
         {/* サイズ選択カード */}
         <div className="card" style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '14px', fontWeight: 700, color: '#333' }}>普段よく着るサイズ</span>
             <span className="form-optional">任意</span>
           </div>
@@ -61,13 +44,13 @@ export default function BodyInput() {
                 onClick={() => setBodyData(prev => ({ ...prev, usualSize: size }))}
                 style={{
                   flex: 1,
-                  height: '40px',
+                  height: '42px',
                   borderRadius: '12px',
-                  border: 'none',
+                  border: bodyData.usualSize === size ? 'none' : '1.5px solid #E8D5D8',
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  background: bodyData.usualSize === size ? '#E8A0A8' : '#FAF5F0',
+                  background: bodyData.usualSize === size ? '#E8A0A8' : '#FFFFFF',
                   color: bodyData.usualSize === size ? '#fff' : '#999',
                   transition: 'all 0.15s',
                 }}
@@ -99,15 +82,18 @@ export default function BodyInput() {
                   onChange={handleChange}
                   style={{
                     flex: 1,
-                    height: '40px',
-                    background: '#FAF5F0',
-                    border: 'none',
-                    borderRadius: '10px',
+                    height: '44px',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E8D5D8',
+                    borderRadius: '12px',
                     padding: '0 12px',
                     fontSize: '15px',
                     color: '#333',
                     outline: 'none',
+                    transition: 'border-color 0.15s',
                   }}
+                  onFocus={e => { e.target.style.borderColor = '#E8A0A8' }}
+                  onBlur={e => { e.target.style.borderColor = '#E8D5D8' }}
                 />
                 <span style={{ fontSize: '13px', color: '#bbb', width: '24px' }}>{unit}</span>
               </div>

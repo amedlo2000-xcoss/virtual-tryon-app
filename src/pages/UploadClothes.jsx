@@ -1,23 +1,8 @@
 import { useRef } from 'react'
 import NavButtons from '../components/NavButtons'
+import StepIndicator from '../components/StepIndicator'
 import { useTryOn } from '../context/TryOnContext'
 import { supabase } from '../supabase'
-
-function ProgressBar({ current, total }) {
-  return (
-    <div className="progress-bar">
-      {Array.from({ length: total }, (_, i) => {
-        const s = i + 1
-        return (
-          <div
-            key={i}
-            className={`progress-step ${s < current ? 'done' : s === current ? 'active' : ''}`}
-          />
-        )
-      })}
-    </div>
-  )
-}
 
 function resizeImage(file, maxSize = 1024) {
   return new Promise((resolve) => {
@@ -69,10 +54,8 @@ export default function UploadClothes() {
 
   return (
     <div className="page">
-      <ProgressBar current={3} total={4} />
-
       <div className="page-header">
-        <p className="step-label">Step 3 / 4</p>
+        <StepIndicator current={3} total={4} />
         <h1 className="page-title">着せたい服の選択</h1>
         <p className="page-desc">
           縦向きの洋服画像がおすすめです。<br />
@@ -105,7 +88,7 @@ export default function UploadClothes() {
               justifyContent: 'center',
               fontSize: '28px',
             }}>
-              👚
+              👗
             </div>
             <div className="upload-text">
               <strong>衣服の画像を選択</strong>
@@ -116,7 +99,7 @@ export default function UploadClothes() {
               color: '#fff',
               fontSize: '13px',
               fontWeight: 700,
-              padding: '10px 28px',
+              padding: '12px 32px',
               borderRadius: '20px',
             }}>
               画像を選ぶ
@@ -148,10 +131,10 @@ export default function UploadClothes() {
         )}
 
         <div className="card" style={{ marginTop: '16px' }}>
-          <strong style={{ display: 'block', marginBottom: '6px', color: '#333' }}>
-            💡 画像のコツ
+          <strong style={{ display: 'block', marginBottom: '8px', color: '#333', fontSize: '14px' }}>
+            画像のコツ
           </strong>
-          <p style={{ fontSize: '13px', color: '#999', lineHeight: 1.8 }}>
+          <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.8 }}>
             ・商品ページの画像でもOK<br />
             ・着用画像でも使えます<br />
             ・服全体が写っているとより正確

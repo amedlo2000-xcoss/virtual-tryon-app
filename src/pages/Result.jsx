@@ -2,24 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTryOn } from '../context/TryOnContext'
 import ShareButton from '../components/ShareButton'
-
-// const PIAPI_KEY = 'b123fd0c2caa35b6258b8b86543fc4dace1a66a07de1da4cdff3f84001cd1d50'
-
-function ProgressBar({ current, total }) {
-  return (
-    <div className="progress-bar">
-      {Array.from({ length: total }, (_, i) => {
-        const s = i + 1
-        return (
-          <div
-            key={i}
-            className={`progress-step ${s < current ? 'done' : s === current ? 'active' : ''}`}
-          />
-        )
-      })}
-    </div>
-  )
-}
+import StepIndicator from '../components/StepIndicator'
 
 export default function Result() {
   const navigate = useNavigate()
@@ -46,27 +29,6 @@ export default function Result() {
     setProgress(0)
 
     try {
-      // ---- PiAPI（旧） ----
-      // const response = await fetch('https://api.piapi.ai/api/v1/task', {
-      //   method: 'POST',
-      //   headers: {
-      //     'x-api-key': PIAPI_KEY,
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     model: 'kling',
-      //     task_type: 'ai_try_on',
-      //     input: {
-      //       model_input: userImage,
-      //       dress_input: clothesImage,
-      //       batch_size: 1,
-      //     },
-      //   }),
-      // })
-      // const data = await response.json()
-      // const taskId = data?.data?.task_id
-
-      // ---- FASHN V1.6 ----
       const fashnResponse = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: {
@@ -129,38 +91,36 @@ export default function Result() {
 
   return (
     <div className="page">
-      <ProgressBar current={4} total={4} />
-
       <div className="page-header">
-        <p className="step-label">Step 4 / 4</p>
+        <StepIndicator current={4} total={4} />
         <h1 className="page-title">試着結果</h1>
         <p className="page-desc">AIが試着画像を生成します。</p>
       </div>
 
       <div className="page-content">
 
-        {/* アップロード画像（縦型2列） */}
-        {(userImage || clothesImage) && (
+        {/* 入力画像プレビュー（縦型2列） */}
+        {(userImage || clothesImage) && !tryonResult && (
           <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '11px', color: '#bbb', textAlign: 'center', marginBottom: '6px', fontWeight: 600 }}>
+              <p style={{ fontSize: '11px', color: '#888', textAlign: 'center', marginBottom: '6px', fontWeight: 600, letterSpacing: '0.05em' }}>
                 あなたの写真
               </p>
               <div className="result-image-card">
                 {userImage
                   ? <img src={userImage} alt="あなたの写真" />
-                  : <span>写真<br />なし</span>
+                  : <span style={{ color: '#ccc' }}>写真<br />なし</span>
                 }
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '11px', color: '#bbb', textAlign: 'center', marginBottom: '6px', fontWeight: 600 }}>
+              <p style={{ fontSize: '11px', color: '#888', textAlign: 'center', marginBottom: '6px', fontWeight: 600, letterSpacing: '0.05em' }}>
                 選んだ服
               </p>
               <div className="result-image-card">
                 {clothesImage
                   ? <img src={clothesImage} alt="選んだ服" />
-                  : <span>服の<br />画像なし</span>
+                  : <span style={{ color: '#ccc' }}>服の<br />画像なし</span>
                 }
               </div>
             </div>
@@ -175,25 +135,25 @@ export default function Result() {
             onClick={handleTryon}
             disabled={loading}
           >
-            {loading ? '⏳ AI試着中...（3〜5分）' : '✨ AI試着を開始する'}
+            {loading ? 'AI試着中...（3〜5分）' : 'AI試着を開始する'}
           </button>
         )}
 
         {/* エラー */}
         {error && (
-          <div className="card" style={{ background: '#FFF5F5', color: '#cc0000', textAlign: 'center', fontSize: '13px' }}>
-            ❌ {error}
+          <div className="card" style={{ background: '#FFF5F5', color: '#cc0000', textAlign: 'center', fontSize: '13px', padding: '16px' }}>
+            {error}
           </div>
         )}
 
         {/* ローディング進捗バー */}
         {loading && (
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#aaa' }}>AI処理中...</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '12px', color: '#888' }}>AI処理中...</span>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#E8A0A8' }}>{progress}%</span>
             </div>
-            <div style={{ background: '#2a2a2a', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
+            <div style={{ background: '#F0EBE4', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',
@@ -210,22 +170,54 @@ export default function Result() {
           </div>
         )}
 
-        {/* 試着結果（縦型） */}
+        {/* 試着結果（縦型・大きく表示） */}
         {tryonResult ? (
-          <div style={{ marginBottom: '20px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#E8A0A8' }}>
-              ✅ 試着完了！
-            </p>
-            <div className="portrait-preview">
+          <div style={{ marginBottom: '24px' }}>
+            {/* 完了バッジ */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginBottom: '14px',
+            }}>
+              <span style={{
+                background: 'linear-gradient(135deg, #E8A0A8, #F0BEC3)',
+                color: '#fff',
+                fontSize: '13px',
+                fontWeight: 700,
+                padding: '6px 20px',
+                borderRadius: '20px',
+                letterSpacing: '0.05em',
+              }}>
+                試着完了
+              </span>
+            </div>
+
+            {/* 結果画像（大きく表示） */}
+            <div className="portrait-preview" style={{ marginBottom: '16px' }}>
               <img src={tryonResult} alt="試着結果" />
             </div>
+
+            {/* 保存・シェアボタン */}
             <ShareButton imageUrl={tryonResult} />
           </div>
         ) : (
           !loading && (
             <div className="result-placeholder">
-              <span style={{ fontSize: '48px' }}>✨</span>
-              <span style={{ color: '#ccc', fontSize: '14px', lineHeight: 1.7 }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #FAF5F0, #F5E6E8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+              }}>
+                ✨
+              </div>
+              <span style={{ color: '#bbb', fontSize: '14px', lineHeight: 1.7 }}>
                 ここにAI試着結果が<br />表示されます
               </span>
             </div>
@@ -235,18 +227,18 @@ export default function Result() {
         {/* 体型情報 */}
         {filledBody.length > 0 && (
           <div className="card">
-            <strong style={{ display: 'block', marginBottom: '10px', color: '#333' }}>
-              📋 入力した体型情報
+            <strong style={{ display: 'block', marginBottom: '10px', color: '#333', fontSize: '14px' }}>
+              入力した体型情報
             </strong>
             {filledBody.map(([key, val]) => (
               <div key={key} style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                padding: '6px 0',
+                padding: '8px 0',
                 borderBottom: '1px solid #F0EBE4',
                 fontSize: '14px',
               }}>
-                <span style={{ color: '#999' }}>{bodyLabels[key]}</span>
+                <span style={{ color: '#888' }}>{bodyLabels[key]}</span>
                 <span style={{ fontWeight: 700, color: '#333' }}>
                   {val}{key !== 'usualSize' ? ' cm / kg' : ''}
                 </span>
@@ -255,7 +247,7 @@ export default function Result() {
           </div>
         )}
 
-        {/* アクションボタン */}
+        {/* もう一度試す */}
         <div style={{ marginTop: '8px' }}>
           <button
             className="btn-next"

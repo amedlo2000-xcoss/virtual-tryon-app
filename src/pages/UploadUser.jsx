@@ -1,23 +1,8 @@
 import { useRef } from 'react'
 import NavButtons from '../components/NavButtons'
+import StepIndicator from '../components/StepIndicator'
 import { useTryOn } from '../context/TryOnContext'
 import { supabase } from '../supabase'
-
-function ProgressBar({ current, total }) {
-  return (
-    <div className="progress-bar">
-      {Array.from({ length: total }, (_, i) => {
-        const s = i + 1
-        return (
-          <div
-            key={i}
-            className={`progress-step ${s < current ? 'done' : s === current ? 'active' : ''}`}
-          />
-        )
-      })}
-    </div>
-  )
-}
 
 function resizeImage(file, maxSize = 1024) {
   return new Promise((resolve) => {
@@ -69,10 +54,8 @@ export default function UploadUser() {
 
   return (
     <div className="page">
-      <ProgressBar current={2} total={4} />
-
       <div className="page-header">
-        <p className="step-label">Step 2 / 4</p>
+        <StepIndicator current={2} total={4} />
         <h1 className="page-title">あなたの写真</h1>
         <p className="page-desc">
           正面からの縦向き写真がおすすめです。<br />
@@ -116,7 +99,7 @@ export default function UploadUser() {
               color: '#fff',
               fontSize: '13px',
               fontWeight: 700,
-              padding: '10px 28px',
+              padding: '12px 32px',
               borderRadius: '20px',
             }}>
               写真を選ぶ
@@ -148,10 +131,10 @@ export default function UploadUser() {
         )}
 
         <div className="card" style={{ marginTop: '16px' }}>
-          <strong style={{ display: 'block', marginBottom: '6px', color: '#333' }}>
-            📌 撮影のコツ
+          <strong style={{ display: 'block', marginBottom: '8px', color: '#333', fontSize: '14px' }}>
+            撮影のコツ
           </strong>
-          <p style={{ fontSize: '13px', color: '#999', lineHeight: 1.8 }}>
+          <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.8 }}>
             ・縦向きで全身が映るように撮影<br />
             ・白・グレーの無地壁を背景に<br />
             ・ぴったりした服装で撮ると精度UP
