@@ -45,6 +45,13 @@ const ACCENT   = '#C8956C'
 const PAGE_SIZE = 10
 
 // ─── ユーティリティ ───────────────────────────────────────────────────────────
+function daysAgo(n) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
 function formatDate(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
