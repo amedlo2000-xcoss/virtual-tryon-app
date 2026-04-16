@@ -39,10 +39,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
-import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts'
 
 // ─── 定数 ────────────────────────────────────────────────────────────────────
 const ACCENT   = '#C8956C'
@@ -145,6 +141,7 @@ export default function Admin() {
   const [regMonthly, setRegMonthly]     = useState([])
   const [closetDaily, setClosetDaily]   = useState([])
   const [graphLoading, setGraphLoading] = useState(true)
+  const [RechartsComponents, setRechartsComponents] = useState(null)
 
   // ユーザー一覧
   const [users, setUsers]         = useState([])
@@ -254,6 +251,12 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
+    import('recharts').then((mod) => {
+      setRechartsComponents(mod)
+    })
+  }, [])
+
+  useEffect(() => {
     loadKpi()
     loadGraphs()
     loadUsers(0)
@@ -320,6 +323,10 @@ export default function Admin() {
   }
 
   const totalPages = Math.ceil(userCount / PAGE_SIZE)
+  const {
+    LineChart, Line, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  } = RechartsComponents ?? {}
 
   // ─── レンダリング ────────────────────────────────────────────────────────────
   return (
@@ -404,69 +411,77 @@ export default function Admin() {
           グラフを読み込み中...
         </div>
 
-        {/* グラフ本体 (display:none で制御) */}
-        <div style={{ display: graphLoading ? 'none' : 'block' }}>
-          <ChartCard title="日別 AI試着回数（過去30日）">
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={tryonDaily}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  labelStyle={{ color: '#666', fontSize: '12px' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke={ACCENT}
-                  strokeWidth={2}
-                  dot={{ fill: ACCENT, r: 3 }}
-                  activeDot={{ r: 5 }}
-                  name="試着回数"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        {/* グラフ本体 */}
+        {!graphLoading && (
+          RechartsComponents === null ? (
+            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+              読み込み中...
+            </div>
+          ) : (
+            <>
+              <ChartCard title="日別 AI試着回数（過去30日）">
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={tryonDaily}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      labelStyle={{ color: '#666', fontSize: '12px' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke={ACCENT}
+                      strokeWidth={2}
+                      dot={{ fill: ACCENT, r: 3 }}
+                      activeDot={{ r: 5 }}
+                      name="試着回数"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
 
-          <ChartCard title="月別 新規登録数（過去12ヶ月）">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={regMonthly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  labelStyle={{ color: '#666', fontSize: '12px' }}
-                />
-                <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+              <ChartCard title="月別 新規登録数（過去12ヶ月）">
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={regMonthly}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#bbb' }} />
+                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      labelStyle={{ color: '#666', fontSize: '12px' }}
+                    />
+                    <Bar dataKey="count" fill={ACCENT} radius={[6, 6, 0, 0]} name="新規登録数" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
 
-          <ChartCard title="日別 クローゼット登録数（過去30日）">
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={closetDaily}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
-                <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  labelStyle={{ color: '#666', fontSize: '12px' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke={ACCENT}
-                  strokeWidth={2}
-                  dot={{ fill: ACCENT, r: 3 }}
-                  activeDot={{ r: 5 }}
-                  name="登録数"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
+              <ChartCard title="日別 クローゼット登録数（過去30日）">
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={closetDaily}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EAE3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#bbb' }} interval={4} />
+                    <YAxis tick={{ fontSize: 10, fill: '#bbb' }} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      labelStyle={{ color: '#666', fontSize: '12px' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke={ACCENT}
+                      strokeWidth={2}
+                      dot={{ fill: ACCENT, r: 3 }}
+                      activeDot={{ r: 5 }}
+                      name="登録数"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </>
+          )
+        )}
 
         {/* ③ ユーザー一覧 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0' }}>
