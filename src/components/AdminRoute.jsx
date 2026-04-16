@@ -37,22 +37,15 @@ export default function AdminRoute() {
       })
   }, [user, navigate])
 
-  // insertBefore エラーを防ぐため、条件分岐でアンマウントせず display:none で制御する
-  return (
-    <div style={{ minHeight: '100vh' }}>
-      {/* ローディングスピナー */}
+  if (checking) {
+    return (
       <div style={{
-        display: checking ? 'flex' : 'none',
-        position: 'fixed',
-        inset: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#F7F5F2',
-        zIndex: 9999,
+        position: 'fixed', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#F7F5F2', zIndex: 9999,
       }}>
         <div style={{
-          width: '44px',
-          height: '44px',
+          width: '44px', height: '44px',
           border: '4px solid #E8DDD5',
           borderTop: '4px solid #C8956C',
           borderRadius: '50%',
@@ -60,11 +53,10 @@ export default function AdminRoute() {
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
+    )
+  }
 
-      {/* 管理者コンテンツ */}
-      <div style={{ display: (!checking && isAdmin) ? 'block' : 'none' }}>
-        <Outlet />
-      </div>
-    </div>
-  )
+  if (!isAdmin) return null
+
+  return <Outlet />
 }
