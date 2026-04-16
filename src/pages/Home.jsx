@@ -23,7 +23,7 @@ export default function Home() {
         }}>
           Miron
         </h1>
-        <p style={{ fontSize: '13px', color: '#C8956C', fontWeight: 600, letterSpacing: '0.1em' }}>
+        <p style={{ fontSize: '13px', color: '#E8A0A8', fontWeight: 600, letterSpacing: '0.1em' }}>
           VIRTUAL TRY-ON
         </p>
         <button
@@ -85,7 +85,7 @@ export default function Home() {
               width: '44px',
               height: '44px',
               borderRadius: '14px',
-              background: '#F7F5F2',
+              background: '#FAF5F0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -96,7 +96,7 @@ export default function Home() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#C8956C' }}>{item.step}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#E8A0A8' }}>{item.step}</span>
                 <span style={{ fontSize: '14px', fontWeight: 700, color: '#333' }}>{item.title}</span>
               </div>
               <p style={{ fontSize: '12px', color: '#999' }}>{item.desc}</p>

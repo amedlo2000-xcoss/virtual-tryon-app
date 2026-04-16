@@ -67,7 +67,7 @@ export default function BodyInput() {
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  background: bodyData.usualSize === size ? '#C8956C' : '#F7F5F2',
+                  background: bodyData.usualSize === size ? '#E8A0A8' : '#FAF5F0',
                   color: bodyData.usualSize === size ? '#fff' : '#999',
                   transition: 'all 0.15s',
                 }}
@@ -100,7 +100,7 @@ export default function BodyInput() {
                   style={{
                     flex: 1,
                     height: '40px',
-                    background: '#F7F5F2',
+                    background: '#FAF5F0',
                     border: 'none',
                     borderRadius: '10px',
                     padding: '0 12px',

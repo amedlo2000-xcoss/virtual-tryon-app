@@ -131,7 +131,7 @@ export default function AdminLogin() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#F7F5F2',
+      background: '#FAF5F0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -144,7 +144,7 @@ export default function AdminLogin() {
           <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#333', letterSpacing: '0.05em', margin: 0 }}>
             Miron
           </h1>
-          <p style={{ fontSize: '11px', color: '#C8956C', fontWeight: 700, letterSpacing: '0.15em', margin: '4px 0 0' }}>
+          <p style={{ fontSize: '11px', color: '#E8A0A8', fontWeight: 700, letterSpacing: '0.15em', margin: '4px 0 0' }}>
             ADMIN CONSOLE
           </p>
         </div>
@@ -200,7 +200,7 @@ export default function AdminLogin() {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@example.com"
                 style={INPUT_STYLE}
-                onFocus={e => (e.target.style.borderColor = '#C8956C')}
+                onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
                 onBlur={e  => (e.target.style.borderColor = '#E8E0D8')}
               />
             </div>
@@ -224,7 +224,7 @@ export default function AdminLogin() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
                 style={INPUT_STYLE}
-                onFocus={e => (e.target.style.borderColor = '#C8956C')}
+                onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
                 onBlur={e  => (e.target.style.borderColor = '#E8E0D8')}
               />
             </div>
@@ -236,7 +236,7 @@ export default function AdminLogin() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: loading ? '#D9B89A' : '#C8956C',
+                background: loading ? '#F0C4C8' : '#E8A0A8',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '20px',
@@ -268,7 +268,7 @@ export default function AdminLogin() {
 
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: '#ccc' }}>
           一般ユーザーの方は{' '}
-          <a href="/auth" style={{ color: '#C8956C', textDecoration: 'none', fontWeight: 600 }}>
+          <a href="/auth" style={{ color: '#E8A0A8', textDecoration: 'none', fontWeight: 600 }}>
             こちら
           </a>
         </p>

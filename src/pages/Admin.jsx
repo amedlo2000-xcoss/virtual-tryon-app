@@ -41,7 +41,7 @@ import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 
 // ─── 定数 ────────────────────────────────────────────────────────────────────
-const ACCENT    = '#C8956C'
+const ACCENT    = '#E8A0A8'
 const PAGE_SIZE = 10
 
 // ─── ユーティリティ ───────────────────────────────────────────────────────────
@@ -439,7 +439,7 @@ export default function Admin() {
 
   // ─── レンダリング ────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F5F2' }}>
+    <div style={{ minHeight: '100vh', background: '#FAF5F0' }}>
 
       {/* ヘッダー */}
       <div style={{
@@ -457,7 +457,7 @@ export default function Admin() {
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#333', margin: 0 }}>
             Miron 管理画面
           </h1>
-          <p style={{ fontSize: '11px', color: '#C8956C', fontWeight: 600, margin: '2px 0 0', letterSpacing: '0.08em' }}>
+          <p style={{ fontSize: '11px', color: '#E8A0A8', fontWeight: 600, margin: '2px 0 0', letterSpacing: '0.08em' }}>
             ADMIN DASHBOARD
           </p>
         </div>
@@ -473,7 +473,7 @@ export default function Admin() {
             cursor: 'pointer',
             transition: 'border-color 0.2s',
           }}
-          onMouseEnter={e => (e.target.style.borderColor = '#C8956C')}
+          onMouseEnter={e => (e.target.style.borderColor = '#E8A0A8')}
           onMouseLeave={e => (e.target.style.borderColor = '#E8E0D8')}
         >
           ログアウト
@@ -561,7 +561,7 @@ export default function Admin() {
               <tbody>
                 {/* ローディングスケルトン行 (display:none で制御) */}
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={`skel-${i}`} style={{ display: userLoading ? '' : 'none', borderBottom: '1px solid #F7F5F2' }}>
+                  <tr key={`skel-${i}`} style={{ display: userLoading ? '' : 'none', borderBottom: '1px solid #FAF5F0' }}>
                     {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} style={{ padding: '14px 16px' }}>
                         <div style={{
@@ -586,7 +586,7 @@ export default function Admin() {
                 {users.map(u => (
                   <tr key={u.id} style={{
                     display: userLoading ? 'none' : '',
-                    borderBottom: '1px solid #F7F5F2',
+                    borderBottom: '1px solid #FAF5F0',
                     background: u.is_banned ? '#FFF8F7' : 'transparent',
                     transition: 'background 0.15s',
                   }}
@@ -598,7 +598,7 @@ export default function Admin() {
                       {u.is_admin && (
                         <span style={{
                           marginLeft: '6px', fontSize: '10px', fontWeight: 700,
-                          background: '#FFF3E8', color: '#C8956C',
+                          background: '#F5E6E8', color: '#E8A0A8',
                           padding: '2px 6px', borderRadius: '6px',
                         }}>
                           管理者
@@ -740,7 +740,7 @@ export default function Admin() {
                       height: '36px',
                       borderRadius: '12px',
                       border: 'none',
-                      background: p === page ? ACCENT : '#F7F5F2',
+                      background: p === page ? ACCENT : '#FAF5F0',
                       color: p === page ? '#FFFFFF' : '#666',
                       fontSize: '13px',
                       fontWeight: 700,

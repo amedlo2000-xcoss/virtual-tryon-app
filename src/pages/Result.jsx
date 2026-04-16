@@ -191,14 +191,14 @@ export default function Result() {
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
               <span style={{ fontSize: '12px', color: '#aaa' }}>AI処理中...</span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#C8956C' }}>{progress}%</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#E8A0A8' }}>{progress}%</span>
             </div>
             <div style={{ background: '#2a2a2a', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',
                   width: `${progress}%`,
-                  background: 'linear-gradient(90deg, #C8956C, #e8b48c)',
+                  background: 'linear-gradient(90deg, #E8A0A8, #F0BEC3)',
                   borderRadius: '8px',
                   transition: 'width 0.5s ease',
                 }}
@@ -213,7 +213,7 @@ export default function Result() {
         {/* 試着結果（縦型） */}
         {tryonResult ? (
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#C8956C' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#E8A0A8' }}>
               ✅ 試着完了！
             </p>
             <div className="portrait-preview">

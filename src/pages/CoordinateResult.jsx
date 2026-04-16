@@ -265,9 +265,9 @@ export default function CoordinateResult() {
             {uploading && (
               <div style={{
                 position: 'absolute', inset: 0,
-                background: 'rgba(247,245,242,0.7)',
+                background: 'rgba(250,245,240,0.7)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '20px', fontSize: '13px', color: '#C8956C', fontWeight: 700,
+                borderRadius: '20px', fontSize: '13px', color: '#E8A0A8', fontWeight: 700,
               }}>
                 アップロード中...
               </div>
@@ -282,7 +282,7 @@ export default function CoordinateResult() {
             <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
             <div style={{
               width: '64px', height: '64px', borderRadius: '20px',
-              background: '#F7F5F2',
+              background: '#FAF5F0',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px',
             }}>
               📷
@@ -292,7 +292,7 @@ export default function CoordinateResult() {
               正面からの全身写真がおすすめです
             </div>
             <div style={{
-              background: '#C8956C', color: '#fff',
+              background: '#E8A0A8', color: '#fff',
               fontSize: '13px', fontWeight: 700,
               padding: '10px 28px', borderRadius: '20px',
             }}>
@@ -301,9 +301,9 @@ export default function CoordinateResult() {
             {uploading && (
               <div style={{
                 position: 'absolute', inset: 0,
-                background: 'rgba(247,245,242,0.7)',
+                background: 'rgba(250,245,240,0.7)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '20px', fontSize: '13px', color: '#C8956C', fontWeight: 700,
+                borderRadius: '20px', fontSize: '13px', color: '#E8A0A8', fontWeight: 700,
               }}>
                 アップロード中...
               </div>
@@ -396,10 +396,10 @@ export default function CoordinateResult() {
         {loading && loadingStep && (
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '13px', color: '#C8956C', fontWeight: 700 }}>
+              <span style={{ fontSize: '13px', color: '#E8A0A8', fontWeight: 700 }}>
                 {currentMessage.main}
               </span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#C8956C' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#E8A0A8' }}>
                 {progress}%
               </span>
             </div>
@@ -407,7 +407,7 @@ export default function CoordinateResult() {
               <div style={{
                 height: '100%',
                 width: `${progress}%`,
-                background: 'linear-gradient(90deg, #C8956C, #e8b48c)',
+                background: 'linear-gradient(90deg, #E8A0A8, #F0BEC3)',
                 borderRadius: '8px',
                 transition: 'width 0.5s ease',
               }} />
@@ -421,7 +421,7 @@ export default function CoordinateResult() {
         {/* 試着結果 */}
         {tryonResult && (
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#C8956C' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', textAlign: 'center', color: '#E8A0A8' }}>
               試着完了！
             </p>
             <div className="portrait-preview" style={{ marginBottom: '16px' }}>

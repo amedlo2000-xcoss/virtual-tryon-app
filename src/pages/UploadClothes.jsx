@@ -99,7 +99,7 @@ export default function UploadClothes() {
               width: '64px',
               height: '64px',
               borderRadius: '20px',
-              background: '#F7F5F2',
+              background: '#FAF5F0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -112,7 +112,7 @@ export default function UploadClothes() {
               服全体が見える写真を<br />ご利用ください
             </div>
             <div style={{
-              background: '#C8956C',
+              background: '#E8A0A8',
               color: '#fff',
               fontSize: '13px',
               fontWeight: 700,

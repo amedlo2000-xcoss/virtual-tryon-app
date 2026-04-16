@@ -37,12 +37,12 @@ export default function AdminRoute() {
       <div style={{
         position: 'fixed', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#F7F5F2', zIndex: 9999,
+        background: '#FAF5F0', zIndex: 9999,
       }}>
         <div style={{
           width: '44px', height: '44px',
           border: '4px solid #E8DDD5',
-          borderTop: '4px solid #C8956C',
+          borderTop: '4px solid #E8A0A8',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />

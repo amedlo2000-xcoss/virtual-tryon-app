@@ -243,7 +243,7 @@ export default function Closet() {
                     padding: '8px 18px',
                     borderRadius: '20px',
                     border: selectedCategory?.label === cat.label ? 'none' : '1px solid #ddd',
-                    background: selectedCategory?.label === cat.label ? '#C8956C' : '#F7F5F2',
+                    background: selectedCategory?.label === cat.label ? '#E8A0A8' : '#FAF5F0',
                     color: selectedCategory?.label === cat.label ? '#FFFFFF' : '#333333',
                     fontSize: '13px',
                     fontWeight: 600,

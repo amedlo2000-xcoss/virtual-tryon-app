@@ -51,7 +51,7 @@ export default function ResetPassword() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#F7F5F2',
+      background: '#FAF5F0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -64,7 +64,7 @@ export default function ResetPassword() {
           <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#333', letterSpacing: '0.05em' }}>
             Miron
           </h1>
-          <p style={{ fontSize: '12px', color: '#C8956C', fontWeight: 600, letterSpacing: '0.1em' }}>
+          <p style={{ fontSize: '12px', color: '#E8A0A8', fontWeight: 600, letterSpacing: '0.1em' }}>
             VIRTUAL TRY-ON
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function ResetPassword() {
                   boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => e.target.style.borderColor = '#C8956C'}
+                onFocus={e => e.target.style.borderColor = '#E8A0A8'}
                 onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
               />
             </div>
@@ -150,7 +150,7 @@ export default function ResetPassword() {
                   boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => e.target.style.borderColor = '#C8956C'}
+                onFocus={e => e.target.style.borderColor = '#E8A0A8'}
                 onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
               />
             </div>
@@ -162,7 +162,7 @@ export default function ResetPassword() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: loading ? '#D9B89A' : '#C8956C',
+                background: loading ? '#F0C4C8' : '#E8A0A8',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '20px',

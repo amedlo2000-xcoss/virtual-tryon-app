@@ -16,7 +16,7 @@ html, body {
     'Helvetica Neue', Arial,
     'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
     Meiryo, sans-serif;
-  background: #F7F5F2;
+  background: #FAF5F0;
   color: #333333;
   -webkit-font-smoothing: antialiased;
 }
@@ -32,7 +32,7 @@ html, body {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background: #F7F5F2;
+  background: #FAF5F0;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -57,7 +57,7 @@ html, body {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #E6B89C;
+  color: #E8A0A8;
   margin-bottom: 6px;
 }
 
@@ -96,8 +96,8 @@ html, body {
   transition: background 0.3s;
 }
 
-.progress-step.done   { background: #E6B89C; }
-.progress-step.active { background: #C8956C; }
+.progress-step.done   { background: #F5E6E8; }
+.progress-step.active { background: #E8A0A8; }
 
 /* =====================
    カード
@@ -149,7 +149,7 @@ select {
   padding: 0 16px;
   font-size: 15px;
   color: #333;
-  background: #F7F5F2;
+  background: #FAF5F0;
   outline: none;
   transition: background 0.15s;
   appearance: none;
@@ -167,7 +167,7 @@ select:focus {
 .portrait-upload-frame {
   width: 100%;
   aspect-ratio: 3 / 4;
-  border: 2px dashed #E6B89C;
+  border: 2px dashed #F5E6E8;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -183,8 +183,8 @@ select:focus {
 }
 
 .portrait-upload-frame:hover {
-  border-color: #C8956C;
-  background: #FDF8F5;
+  border-color: #E8A0A8;
+  background: #FAF5F0;
 }
 
 .upload-icon {
@@ -299,12 +299,12 @@ button:active {
 }
 
 .btn-next {
-  background: #C8956C;
+  background: #E8A0A8;
   color: #fff;
 }
 
 .btn-primary {
-  background: #C8956C;
+  background: #E8A0A8;
   color: #fff;
   width: 100%;
 }
@@ -349,13 +349,13 @@ button:active {
 }
 
 .nav-item.active {
-  color: #C8956C;
+  color: #E8A0A8;
 }
 
 .nav-item:active {
   transform: none;
   opacity: 1;
-  background: #F7F5F2;
+  background: #FAF5F0;
 }
 
 .nav-icon {
@@ -374,7 +374,7 @@ button:active {
 }
 
 .btn-share {
-  background: #C8956C;
+  background: #E8A0A8;
   color: #ffffff;
   width: 100%;
   height: 54px;
@@ -436,8 +436,8 @@ button:active {
 }
 
 .closet-card--selected {
-  border-color: #C8956C;
-  box-shadow: 0 2px 16px rgba(200, 149, 108, 0.25);
+  border-color: #E8A0A8;
+  box-shadow: 0 2px 16px rgba(232, 160, 168, 0.25);
 }
 
 .closet-card__image {
@@ -486,12 +486,12 @@ button:active {
 }
 
 .closet-card__btn--select {
-  background: #C8956C;
+  background: #E8A0A8;
   color: #fff;
 }
 
 .closet-card__btn--selected {
-  background: #E6B89C;
+  background: #F5E6E8;
   color: #fff;
 }
 
@@ -550,7 +550,7 @@ button:active {
 .coordinate-slot__empty {
   width: 100%;
   aspect-ratio: 3 / 4;
-  border: 2px dashed #E6B89C;
+  border: 2px dashed #F5E6E8;
   border-radius: 16px;
   background: #FFFFFF;
   display: flex;
@@ -563,8 +563,8 @@ button:active {
 }
 
 .coordinate-slot__empty:hover {
-  border-color: #C8956C;
-  background: #FDF8F5;
+  border-color: #E8A0A8;
+  background: #FAF5F0;
 }
 
 .coordinate-slot__empty span {

@@ -93,7 +93,7 @@ export default function MyPage() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F5F2', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100vh', background: '#FAF5F0', paddingBottom: '100px' }}>
 
       {/* ヘッダー */}
       <div style={{
@@ -161,7 +161,7 @@ export default function MyPage() {
                     onChange={handleChange(key)}
                     placeholder={placeholder}
                     style={INPUT_STYLE}
-                    onFocus={e => (e.target.style.borderColor = '#C8956C')}
+                    onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
                     onBlur={e  => (e.target.style.borderColor = '#ddd')}
                   />
                   {unit && (
@@ -179,7 +179,7 @@ export default function MyPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: saving ? '#D9B89A' : '#C8956C',
+                background: saving ? '#F0C4C8' : '#E8A0A8',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '20px',

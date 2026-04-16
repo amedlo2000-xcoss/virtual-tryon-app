@@ -197,7 +197,7 @@ export default function Coordinate() {
                 overflow: 'hidden',
                 background: '#FFFFFF',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                border: '2px solid #C8956C',
+                border: '2px solid #E8A0A8',
                 cursor: 'pointer',
               }}
               onClick={() => navigate('/closet')}
@@ -217,7 +217,7 @@ export default function Coordinate() {
             </div>
             <p style={{
               fontSize: '11px',
-              color: '#C8956C',
+              color: '#E8A0A8',
               textAlign: 'center',
               marginTop: '6px',
               fontWeight: '600',
@@ -280,7 +280,7 @@ export default function Coordinate() {
                 style={{
                   width: '100%',
                   aspectRatio: '3 / 4',
-                  border: '2px dashed #E6B89C',
+                  border: '2px dashed #F5E6E8',
                   borderRadius: '20px',
                   background: '#FFFFFF',
                   display: 'flex',
@@ -330,7 +330,7 @@ export default function Coordinate() {
                   padding: '6px 14px',
                   borderRadius: '20px',
                   border: selectedNewCategory?.label === cat.label ? 'none' : '1px solid #ddd',
-                  background: selectedNewCategory?.label === cat.label ? '#C8956C' : '#F7F5F2',
+                  background: selectedNewCategory?.label === cat.label ? '#E8A0A8' : '#FAF5F0',
                   color: selectedNewCategory?.label === cat.label ? '#FFFFFF' : '#333333',
                   fontSize: '12px',
                   fontWeight: 600,
