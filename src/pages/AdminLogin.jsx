@@ -66,19 +66,21 @@ export default function AdminLogin() {
   const { user } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (user) {
+    if (user && !isSubmitting) {
       startTransition(() => {
         navigate('/admin', { replace: true })
       })
     }
-  }, [user, navigate])
+  }, [user, isSubmitting, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     setLoading(true)
     setError(null)
 
@@ -87,6 +89,7 @@ export default function AdminLogin() {
     if (signInError) {
       setError('メールアドレスまたはパスワードが正しくありません。')
       setLoading(false)
+      setIsSubmitting(false)
       return
     }
 
@@ -96,6 +99,7 @@ export default function AdminLogin() {
       setError('ユーザー情報の取得に失敗しました。')
       await supabase.auth.signOut()
       setLoading(false)
+      setIsSubmitting(false)
       return
     }
 
@@ -109,6 +113,7 @@ export default function AdminLogin() {
       setError('管理者権限がありません。')
       await supabase.auth.signOut()
       setLoading(false)
+      setIsSubmitting(false)
       return
     }
 
@@ -119,6 +124,8 @@ export default function AdminLogin() {
       .eq('id', user.id)
 
     setLoading(false)
+    // 認証完了後にisSubmittingを解除してuseEffectによるリダイレクトを許可
+    setIsSubmitting(false)
   }
 
   return (
