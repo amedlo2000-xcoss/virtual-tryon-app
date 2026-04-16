@@ -1,67 +1,28 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { flushSync } from 'react-dom'
 import { supabase } from '../supabase'
 
-const AuthContext = createContext(null)
-
-function clearSupabaseStorage() {
-  Object.keys(localStorage)
-    .filter(key => key.startsWith('sb-') || key.includes('supabase'))
-    .forEach(key => localStorage.removeItem(key))
-}
-
-async function forceSignOut(setUser) {
-  clearSupabaseStorage()
-  try {
-    await supabase.auth.signOut()
-  } catch (_) {
-    // signOut itself may fail if token is already invalid — ignore
-  }
-  flushSync(() => setUser(null))
-}
+const AuthContext = createContext({})
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // INITIAL_SESSION は getSession() で処理するため onAuthStateChange では無視する
-    // （二重 setUser 呼び出しによる DOM 破壊を防ぐ）
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[AuthContext] onAuthStateChange event:', event, 'user:', session?.user?.id ?? null)
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         setUser(session?.user ?? null)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
       }
-      // INITIAL_SESSION は getSession() に任せる
-    })
-
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('[AuthContext] getSession user:', session?.user?.id ?? null, 'error:', error?.message ?? null)
-      if (error) {
-        const msg = error.message ?? ''
-        if (
-          msg.includes('Refresh Token') ||
-          msg.includes('refresh_token') ||
-          msg.includes('Invalid Refresh Token') ||
-          msg.includes('token is expired')
-        ) {
-          forceSignOut(setUser)
-        } else {
-          setUser(null)
-        }
-      } else {
-        setUser(session?.user ?? null)
-      }
       setLoading(false)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
   const signOut = async () => {
-    await forceSignOut(setUser)
+    await supabase.auth.signOut()
+    setUser(null)
   }
 
   return (
