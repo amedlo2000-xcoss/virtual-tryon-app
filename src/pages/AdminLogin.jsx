@@ -43,9 +43,10 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-import { useState, startTransition } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { useAuth } from '../context/AuthContext'
 
 const INPUT_STYLE = {
   width: '100%',
@@ -62,10 +63,19 @@ const INPUT_STYLE = {
 
 export default function AdminLogin() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
+
+  useEffect(() => {
+    if (user) {
+      startTransition(() => {
+        navigate('/admin', { replace: true })
+      })
+    }
+  }, [user, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -109,9 +119,6 @@ export default function AdminLogin() {
       .eq('id', user.id)
 
     setLoading(false)
-    startTransition(() => {
-      navigate('/admin', { replace: true })
-    })
   }
 
   return (
