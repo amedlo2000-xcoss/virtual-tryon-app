@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 export default function Auth() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [mode, setMode]       = useState('login')   // 'login' | 'signup'
+  const [mode, setMode]       = useState('login')   // 'login' | 'signup' | 'forgot'
   const [email, setEmail]     = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -85,8 +85,50 @@ export default function Auth() {
     setLoading(false)
   }
 
+  const handleForgot = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://virtual-tryon-app-phi.vercel.app/reset-password'
+    })
+
+    if (error) {
+      const msg = error.message ?? ''
+      let errorMsg
+      if (msg.includes('rate limit') || msg.includes('Too many')) {
+        errorMsg = 'リクエストが多すぎます。しばらく待ってから再度お試しください。'
+      } else if (msg.includes('invalid') || msg.includes('Invalid')) {
+        errorMsg = 'メールアドレスの形式が正しくありません。'
+      } else {
+        errorMsg = `送信に失敗しました: ${msg}`
+      }
+      setMessage({ type: 'error', text: errorMsg })
+    } else {
+      setMessage({ type: 'success', text: 'パスワードリセットメールを送信しました。メールをご確認ください。' })
+      setEmail('')
+    }
+
+    setLoading(false)
+  }
+
   const toggleMode = () => {
     setMode(m => m === 'login' ? 'signup' : 'login')
+    setMessage(null)
+    setEmail('')
+    setPassword('')
+  }
+
+  const goToForgot = () => {
+    setMode('forgot')
+    setMessage(null)
+    setEmail('')
+    setPassword('')
+  }
+
+  const goToLogin = () => {
+    setMode('login')
     setMessage(null)
     setEmail('')
     setPassword('')
@@ -121,7 +163,7 @@ export default function Auth() {
           padding: '32px 28px',
         }}>
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#333', marginBottom: '24px', textAlign: 'center' }}>
-            {mode === 'login' ? 'ログイン' : '新規登録'}
+            {mode === 'login' ? 'ログイン' : mode === 'signup' ? '新規登録' : 'パスワードをリセット'}
           </h2>
 
           {/* メッセージ (display:none方式でDOM安定) */}
@@ -138,120 +180,229 @@ export default function Auth() {
             {message?.text ?? ''}
           </div>
 
-          <form onSubmit={handleSubmit}>
-            {/* メール */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', display: 'block', marginBottom: '6px' }}>
-                メールアドレス
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="example@email.com"
-                autoComplete="off"
+          {/* ログイン・新規登録フォーム */}
+          {mode !== 'forgot' && (
+            <form onSubmit={handleSubmit}>
+              {/* メール */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', display: 'block', marginBottom: '6px' }}>
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  autoComplete="off"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E8E0D8',
+                    fontSize: '14px',
+                    color: '#333',
+                    background: '#FAFAFA',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#C8956C'}
+                  onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
+                />
+              </div>
+
+              {/* パスワード */}
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', display: 'block', marginBottom: '6px' }}>
+                  パスワード
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="6文字以上"
+                  autoComplete="new-password"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E8E0D8',
+                    fontSize: '14px',
+                    color: '#333',
+                    background: '#FAFAFA',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#C8956C'}
+                  onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
+                />
+              </div>
+
+              {/* パスワード忘れリンク（ログイン時のみ） */}
+              {mode === 'login' && (
+                <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={goToForgot}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#C8956C',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      padding: 0,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    パスワードをお忘れの方はこちら
+                  </button>
+                </div>
+              )}
+              {mode === 'signup' && <div style={{ marginBottom: '20px' }} />}
+
+              {/* 送信ボタン */}
+              <button
+                type="submit"
+                disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #E8E0D8',
-                  fontSize: '14px',
-                  color: '#333',
-                  background: '#FAFAFA',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.2s',
+                  padding: '14px',
+                  background: loading ? '#D9B89A' : '#C8956C',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                 }}
-                onFocus={e => e.target.style.borderColor = '#C8956C'}
-                onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
-              />
-            </div>
+              >
+                <span style={{
+                  display: loading ? 'inline-block' : 'none',
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid rgba(255,255,255,0.4)',
+                  borderTop: '2px solid #fff',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }} />
+                {mode === 'login' ? 'ログイン' : '登録する'}
+              </button>
+            </form>
+          )}
 
-            {/* パスワード */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', display: 'block', marginBottom: '6px' }}>
-                パスワード
-              </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="6文字以上"
-                autoComplete="new-password"
+          {/* パスワードリセットフォーム */}
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgot}>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#888', display: 'block', marginBottom: '6px' }}>
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  autoComplete="off"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E8E0D8',
+                    fontSize: '14px',
+                    color: '#333',
+                    background: '#FAFAFA',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#C8956C'}
+                  onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  border: '1.5px solid #E8E0D8',
-                  fontSize: '14px',
-                  color: '#333',
-                  background: '#FAFAFA',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.2s',
+                  padding: '14px',
+                  background: loading ? '#D9B89A' : '#C8956C',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                 }}
-                onFocus={e => e.target.style.borderColor = '#C8956C'}
-                onBlur={e  => e.target.style.borderColor = '#E8E0D8'}
-              />
-            </div>
+              >
+                <span style={{
+                  display: loading ? 'inline-block' : 'none',
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid rgba(255,255,255,0.4)',
+                  borderTop: '2px solid #fff',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }} />
+                リセットメールを送信する
+              </button>
+            </form>
+          )}
 
-            {/* 送信ボタン */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: loading ? '#D9B89A' : '#C8956C',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '20px',
-                fontSize: '15px',
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'background 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
-              <span style={{
-                display: loading ? 'inline-block' : 'none',
-                width: '16px',
-                height: '16px',
-                border: '2px solid rgba(255,255,255,0.4)',
-                borderTop: '2px solid #fff',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite',
-              }} />
-              {mode === 'login' ? 'ログイン' : '登録する'}
-            </button>
-          </form>
-
-          {/* モード切替 */}
+          {/* モード切替・ナビゲーション */}
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <span style={{ fontSize: '13px', color: '#999' }}>
-              {mode === 'login' ? 'アカウントをお持ちでない方は' : 'すでにアカウントをお持ちの方は'}
-            </span>
-            <button
-              onClick={toggleMode}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#C8956C',
-                fontWeight: 700,
-                fontSize: '13px',
-                cursor: 'pointer',
-                marginLeft: '4px',
-                padding: 0,
-              }}
-            >
-              {mode === 'login' ? '新規登録' : 'ログイン'}
-            </button>
+            {mode === 'forgot' ? (
+              <button
+                onClick={goToLogin}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#C8956C',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                ログインに戻る
+              </button>
+            ) : (
+              <>
+                <span style={{ fontSize: '13px', color: '#999' }}>
+                  {mode === 'login' ? 'アカウントをお持ちでない方は' : 'すでにアカウントをお持ちの方は'}
+                </span>
+                <button
+                  onClick={toggleMode}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#C8956C',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    marginLeft: '4px',
+                    padding: 0,
+                  }}
+                >
+                  {mode === 'login' ? '新規登録' : 'ログイン'}
+                </button>
+              </>
+            )}
           </div>
         </div>
 

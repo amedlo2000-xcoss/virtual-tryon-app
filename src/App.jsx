@@ -18,6 +18,7 @@ import Coordinate        from './pages/Coordinate'
 import CoordinateResult  from './pages/CoordinateResult'
 import AdminLogin        from './pages/AdminLogin'
 import Admin             from './pages/Admin'
+import ResetPassword     from './pages/ResetPassword'
 
 function GlobalSpinner() {
   return (
@@ -80,6 +81,7 @@ function AppContent() {
           <Route path="/coordinate-result"  element={<PrivateRoute><CoordinateResult /></PrivateRoute>} />
           <Route path="/admin-login"        element={<AdminLogin />} />
           <Route path="/admin"              element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/reset-password"     element={<ResetPassword />} />
         </Routes>
       </div>
     </TryOnContext.Provider>
