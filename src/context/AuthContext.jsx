@@ -25,17 +25,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // INITIAL_SESSION は getSession() で処理するため onAuthStateChange では無視する
+    // （二重 setUser 呼び出しによる DOM 破壊を防ぐ）
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[AuthContext] onAuthStateChange event:', event, 'user:', session?.user?.id ?? null)
-      if (
-        event === 'SIGNED_IN' ||
-        event === 'TOKEN_REFRESHED' ||
-        event === 'INITIAL_SESSION'
-      ) {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setUser(session?.user ?? null)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
       }
+      // INITIAL_SESSION は getSession() に任せる
     })
 
     supabase.auth.getSession().then(({ data: { session }, error }) => {

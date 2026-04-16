@@ -55,6 +55,7 @@ function AppContent() {
   const [selectedClosetItem, setSelectedClosetItem]   = useState(null)
   const [combinedOutfit, setCombinedOutfit]           = useState(null)
 
+  // loading中は Routes を一切レンダリングしない
   if (loading) return <GlobalSpinner />
 
   return (
@@ -68,20 +69,29 @@ function AppContent() {
     }}>
       <div className="app-container">
         <Routes>
-          <Route path="/auth"          element={<Auth />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/"              element={<Home />} />
-          <Route path="/body"           element={<PrivateRoute><BodyInput /></PrivateRoute>} />
-          <Route path="/upload-user"    element={<PrivateRoute><UploadUser /></PrivateRoute>} />
-          <Route path="/upload-clothes" element={<PrivateRoute><UploadClothes /></PrivateRoute>} />
-          <Route path="/result"              element={<PrivateRoute><Result /></PrivateRoute>} />
-          <Route path="/mypage"             element={<PrivateRoute><MyPage /></PrivateRoute>} />
-          <Route path="/closet"             element={<PrivateRoute><Closet /></PrivateRoute>} />
-          <Route path="/coordinate"         element={<PrivateRoute><Coordinate /></PrivateRoute>} />
-          <Route path="/coordinate-result"  element={<PrivateRoute><CoordinateResult /></PrivateRoute>} />
-          <Route path="/admin-login"        element={<AdminLogin />} />
-          <Route path="/admin"              element={<AdminRoute><Admin /></AdminRoute>} />
-          <Route path="/reset-password"     element={<ResetPassword />} />
+          {/* 公開ルート */}
+          <Route path="/auth"           element={<Auth />} />
+          <Route path="/auth/callback"  element={<AuthCallback />} />
+          <Route path="/"               element={<Home />} />
+          <Route path="/admin-login"    element={<AdminLogin />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* 認証必須ルート — PrivateRoute が Outlet で子を描画 */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/body"              element={<BodyInput />} />
+            <Route path="/upload-user"       element={<UploadUser />} />
+            <Route path="/upload-clothes"    element={<UploadClothes />} />
+            <Route path="/result"            element={<Result />} />
+            <Route path="/mypage"            element={<MyPage />} />
+            <Route path="/closet"            element={<Closet />} />
+            <Route path="/coordinate"        element={<Coordinate />} />
+            <Route path="/coordinate-result" element={<CoordinateResult />} />
+          </Route>
+
+          {/* 管理者専用ルート — AdminRoute が Outlet で子を描画 */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
         </Routes>
       </div>
     </TryOnContext.Provider>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 
@@ -27,14 +27,15 @@ function Spinner() {
   )
 }
 
-export default function AdminRoute({ children }) {
-  const { user, loading: authLoading } = useAuth()
+export default function AdminRoute() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [isAdmin, setIsAdmin] = useState(null)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (authLoading) return
     if (!user) {
+      navigate('/admin-login', { replace: true })
       setChecking(false)
       return
     }
@@ -47,14 +48,18 @@ export default function AdminRoute({ children }) {
         if (error) {
           console.error('AdminRoute: profiles取得エラー', error)
           setIsAdmin(false)
+          navigate('/admin-login', { replace: true })
+        } else if (!data?.is_admin) {
+          setIsAdmin(false)
+          navigate('/admin-login', { replace: true })
         } else {
-          setIsAdmin(data?.is_admin === true)
+          setIsAdmin(true)
         }
         setChecking(false)
       })
-  }, [user, authLoading])
+  }, [user, navigate])
 
-  if (authLoading || checking) return <Spinner />
-  if (!user || !isAdmin) return <Navigate to="/admin-login" replace />
-  return children
+  if (checking) return <Spinner />
+  if (!isAdmin) return null
+  return <Outlet />
 }
