@@ -41,7 +41,7 @@ import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 
 // ─── 定数 ────────────────────────────────────────────────────────────────────
-const ACCENT   = '#C8956C'
+const ACCENT    = '#C8956C'
 const PAGE_SIZE = 10
 
 // ─── ユーティリティ ───────────────────────────────────────────────────────────
@@ -102,6 +102,182 @@ function Spinner() {
   )
 }
 
+// ─── 削除確認ダイアログ ───────────────────────────────────────────────────────
+function ConfirmDialog({ message, onConfirm, onCancel }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 2000,
+    }}>
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '20px',
+        padding: '24px',
+        width: '320px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+      }}>
+        <p style={{ fontSize: '14px', color: '#333', margin: '0 0 24px', lineHeight: 1.6, textAlign: 'center' }}>
+          {message}
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button
+            onClick={onConfirm}
+            style={{
+              background: '#B91C1C',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '20px',
+              width: '100%',
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            削除する
+          </button>
+          <button
+            onClick={onCancel}
+            style={{
+              background: 'none',
+              border: `1.5px solid ${ACCENT}`,
+              color: ACCENT,
+              borderRadius: '20px',
+              width: '100%',
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            キャンセル
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 編集モーダル ─────────────────────────────────────────────────────────────
+function EditModal({ user, onSave, onClose, loading }) {
+  const [form, setForm] = useState({
+    name:     user.name     ?? '',
+    is_admin: user.is_admin ?? false,
+    is_banned: user.is_banned ?? false,
+  })
+
+  const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 2000,
+    }}>
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '20px',
+        padding: '24px',
+        width: '360px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+      }}>
+        <h3 style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: 800, color: '#333' }}>
+          ユーザーを編集
+        </h3>
+
+        {/* 名前 */}
+        <label style={{ display: 'block', marginBottom: '16px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#999', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
+            表示名
+          </span>
+          <input
+            value={form.name}
+            onChange={e => set('name', e.target.value)}
+            placeholder="未設定"
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              padding: '10px 14px',
+              borderRadius: '12px',
+              border: '1.5px solid #E8E0D8',
+              fontSize: '14px',
+              color: '#333',
+              outline: 'none',
+            }}
+          />
+        </label>
+
+        {/* 管理者権限 */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={form.is_admin}
+            onChange={e => set('is_admin', e.target.checked)}
+            style={{ width: '16px', height: '16px', accentColor: ACCENT }}
+          />
+          <span style={{ fontSize: '14px', color: '#333', fontWeight: 600 }}>管理者権限</span>
+        </label>
+
+        {/* 停止状態 */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={form.is_banned}
+            onChange={e => set('is_banned', e.target.checked)}
+            style={{ width: '16px', height: '16px', accentColor: ACCENT }}
+          />
+          <span style={{ fontSize: '14px', color: '#333', fontWeight: 600 }}>停止中</span>
+        </label>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button
+            onClick={() => onSave(form)}
+            disabled={loading}
+            style={{
+              background: ACCENT,
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '20px',
+              width: '100%',
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              opacity: loading ? 0.7 : 1,
+            }}
+          >
+            {loading ? <Spinner /> : '保存する'}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            style={{
+              background: 'none',
+              border: `1.5px solid ${ACCENT}`,
+              color: ACCENT,
+              borderRadius: '20px',
+              width: '100%',
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            キャンセル
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── メインコンポーネント ─────────────────────────────────────────────────────
 export default function Admin() {
   const { signOut } = useAuth()
@@ -118,6 +294,13 @@ export default function Admin() {
   const [userLoading, setUserLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState({})
   const [toast, setToast]         = useState(null)
+
+  // 削除確認ダイアログ
+  const [confirmTarget, setConfirmTarget] = useState(null)
+
+  // 編集モーダル
+  const [editUser, setEditUser]       = useState(null)
+  const [editLoading, setEditLoading] = useState(false)
 
   // ─── データ取得 ─────────────────────────────────────────────────────────────
   const loadKpi = useCallback(async () => {
@@ -157,7 +340,7 @@ export default function Admin() {
 
     const { data, count, error } = await supabase
       .from('profiles')
-      .select('id, email, created_at, is_admin, is_banned, last_login_at', { count: 'exact' })
+      .select('id, email, name, created_at, is_admin, is_banned, last_login_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to)
 
@@ -196,18 +379,16 @@ export default function Admin() {
     setActionLoading(prev => ({ ...prev, [`ban_${userId}`]: false }))
   }
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm('このユーザーを削除しますか？この操作は取り消せません。')) return
+  const handleDelete = (userId) => {
+    setConfirmTarget(userId)
+  }
+
+  const executeDelete = async () => {
+    const userId = confirmTarget
+    setConfirmTarget(null)
     setActionLoading(prev => ({ ...prev, [`del_${userId}`]: true }))
 
-    /**
-     * ⚠️ supabase.auth.admin.deleteUser() にはサービスロールキーが必要です。
-     * フロントエンドでの直接呼び出しはセキュリティリスクがあるため、
-     * 本番環境では Supabase Edge Function を経由してください。
-     * 現状は profiles テーブルを削除し、
-     * closet_items・tryon_sessions を削除するソフトデリートを行います。
-     */
-    const [p1, p2, p3] = await Promise.all([
+    const [p1] = await Promise.all([
       supabase.from('profiles').delete().eq('id', userId),
       supabase.from('closet_items').delete().eq('user_id', userId),
       supabase.from('tryon_sessions').delete().eq('user_id', userId),
@@ -221,6 +402,27 @@ export default function Admin() {
       setUserCount(c => c - 1)
     }
     setActionLoading(prev => ({ ...prev, [`del_${userId}`]: false }))
+  }
+
+  const handleSaveEdit = async (form) => {
+    if (!editUser) return
+    setEditLoading(true)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ name: form.name, is_admin: form.is_admin, is_banned: form.is_banned })
+      .eq('id', editUser.id)
+
+    if (error) {
+      showToast('error', '更新に失敗しました: ' + error.message)
+    } else {
+      showToast('success', '更新しました')
+      setUsers(prev => prev.map(u =>
+        u.id === editUser.id ? { ...u, ...form } : u
+      ))
+      setEditUser(null)
+    }
+    setEditLoading(false)
   }
 
   const handlePageChange = (newPage) => {
@@ -427,6 +629,26 @@ export default function Admin() {
                     </td>
                     <td style={{ padding: '13px 16px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
+                        {/* 編集ボタン */}
+                        <button
+                          onClick={() => setEditUser(u)}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: '12px',
+                            border: `1px solid ${ACCENT}`,
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            background: '#FFFFFF',
+                            color: ACCENT,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          編集
+                        </button>
+
                         {/* 停止/解除ボタン */}
                         <button
                           onClick={() => handleBan(u.id, u.is_banned)}
@@ -553,6 +775,25 @@ export default function Admin() {
 
         <div style={{ height: '40px' }} />
       </div>
+
+      {/* 削除確認ダイアログ */}
+      {confirmTarget && (
+        <ConfirmDialog
+          message="このユーザーを削除しますか？この操作は取り消せません。"
+          onConfirm={executeDelete}
+          onCancel={() => setConfirmTarget(null)}
+        />
+      )}
+
+      {/* 編集モーダル */}
+      {editUser && (
+        <EditModal
+          user={editUser}
+          onSave={handleSaveEdit}
+          onClose={() => setEditUser(null)}
+          loading={editLoading}
+        />
+      )}
 
       {/* トースト */}
       {toast && (
