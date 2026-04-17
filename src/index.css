@@ -1,0 +1,20 @@
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #FAF5F0;
+}
+
+@media (min-width: 481px) {
+  .app-container { max-width: 768px; }
+  .closet-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .history-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media (min-width: 769px) {
+  .app-container { max-width: 1200px; }
+  .closet-grid { grid-template-columns: repeat(4, 1fr) !important; }
+  .history-grid { grid-template-columns: repeat(4, 1fr) !important; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
