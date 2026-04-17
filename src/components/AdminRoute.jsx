@@ -9,19 +9,23 @@ export default function AdminRoute() {
   const [isAdmin, setIsAdmin] = useState(null)
   const [checking, setChecking] = useState(true)
 
+  const userId = user?.id ?? null
+
   useEffect(() => {
     if (loading) return
-    if (!user) {
+    if (!userId) {
       setChecking(false)
       startTransition(() => navigate('/admin-login', { replace: true }))
       return
     }
+    let cancelled = false
     supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
       .then(({ data, error }) => {
+        if (cancelled) return
         if (error || !data?.is_admin) {
           setIsAdmin(false)
           startTransition(() => navigate('/admin-login', { replace: true }))
@@ -30,7 +34,8 @@ export default function AdminRoute() {
         }
         setChecking(false)
       })
-  }, [user, loading, navigate])
+    return () => { cancelled = true }
+  }, [userId, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || checking) {
     return (
