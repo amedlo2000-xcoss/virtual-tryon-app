@@ -8,7 +8,7 @@ const INPUT_STYLE = {
   width: '100%',
   padding: '12px 14px',
   borderRadius: '12px',
-  border: '1px solid #ddd',
+  border: '1.5px solid #E8D5D8',
   fontSize: '14px',
   color: '#333',
   background: '#FAFAFA',
@@ -151,27 +151,54 @@ export default function MyPage() {
           </h2>
 
           <form onSubmit={handleSave}>
-            {fields.map(({ key, label, placeholder, type, unit }) => (
-              <div key={key} style={{ marginBottom: '16px' }}>
-                <label style={LABEL_STYLE}>{label}</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type={type}
-                    value={form[key]}
-                    onChange={handleChange(key)}
-                    placeholder={placeholder}
-                    style={INPUT_STYLE}
-                    onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
-                    onBlur={e  => (e.target.style.borderColor = '#ddd')}
-                  />
-                  {unit && (
-                    <span style={{ fontSize: '13px', color: '#999', whiteSpace: 'nowrap' }}>
-                      {unit}
-                    </span>
-                  )}
+            {/* ニックネーム（全幅） */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={LABEL_STYLE}>ニックネーム</label>
+              <input
+                type="text"
+                value={form.display_name}
+                onChange={handleChange('display_name')}
+                placeholder="例：田中花子"
+                style={INPUT_STYLE}
+                onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
+                onBlur={e  => (e.target.style.borderColor = '#E8D5D8')}
+              />
+            </div>
+
+            {/* 体型情報 2列グリッド */}
+            <p style={{ fontSize: '12px', fontWeight: 700, color: '#C9A96E', marginBottom: '12px', letterSpacing: '0.05em' }}>
+              体型情報
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              {[
+                { key: 'height',     label: '身長',     placeholder: '例：160', type: 'number', unit: 'cm' },
+                { key: 'weight',     label: '体重',     placeholder: '例：55',  type: 'number', unit: 'kg' },
+                { key: 'bust',       label: 'バスト',   placeholder: '例：85',  type: 'number', unit: 'cm' },
+                { key: 'waist',      label: 'ウエスト', placeholder: '例：65',  type: 'number', unit: 'cm' },
+                { key: 'hip',        label: 'ヒップ',   placeholder: '例：88',  type: 'number', unit: 'cm' },
+                { key: 'usual_size', label: 'いつものサイズ', placeholder: '例：M', type: 'text', unit: '' },
+              ].map(({ key, label, placeholder, type, unit }) => (
+                <div key={key}>
+                  <label style={LABEL_STYLE}>{label}</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input
+                      type={type}
+                      value={form[key]}
+                      onChange={handleChange(key)}
+                      placeholder={placeholder}
+                      style={INPUT_STYLE}
+                      onFocus={e => (e.target.style.borderColor = '#E8A0A8')}
+                      onBlur={e  => (e.target.style.borderColor = '#E8D5D8')}
+                    />
+                    {unit && (
+                      <span style={{ fontSize: '12px', color: '#999', whiteSpace: 'nowrap' }}>
+                        {unit}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             <button
               type="submit"
@@ -179,7 +206,7 @@ export default function MyPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: saving ? '#F0C4C8' : '#E8A0A8',
+                background: saving ? '#DEC08A' : '#C9A96E',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '20px',

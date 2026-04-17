@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import NavButtons from '../components/NavButtons'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -124,6 +125,7 @@ export default function Home() {
         はじめる →
       </button>
 
+      <NavButtons />
     </div>
   )
 }

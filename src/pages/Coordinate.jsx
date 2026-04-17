@@ -174,6 +174,37 @@ export default function Coordinate() {
       </div>
 
       <div className="page-content">
+        {/* ステップ説明 */}
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '20px',
+          padding: '14px 16px',
+          marginBottom: '16px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          display: 'flex',
+          gap: '12px',
+        }}>
+          {[
+            { step: '01', label: 'クローゼットの服', sub: '選択済み' },
+            { step: '02', label: '新しい服', sub: '画像をアップ' },
+          ].map(s => (
+            <div key={s.step} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '10px',
+                background: '#FAF5F0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#E8A0A8' }}>{s.step}</span>
+              </div>
+              <div>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#333', margin: 0 }}>{s.label}</p>
+                <p style={{ fontSize: '11px', color: '#999', margin: 0 }}>{s.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* 左右レイアウト */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
 

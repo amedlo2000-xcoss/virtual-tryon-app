@@ -51,8 +51,11 @@ export default function Closet() {
   const [pendingFile, setPendingFile] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0])
   const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [filterCat, setFilterCat] = useState('すべて')
   const inputRef = useRef(null)
   const navigate = useNavigate()
+
+  const filterTabs = ['すべて', ...CATEGORIES.map(c => c.label)]
 
   useEffect(() => {
     if (!user) return
@@ -126,6 +129,10 @@ export default function Closet() {
     }
   }
 
+  const filteredItems = filterCat === 'すべて'
+    ? closetItems
+    : closetItems.filter(item => item.category === filterCat)
+
   return (
     <div className="page">
       <div className="page-header">
@@ -134,14 +141,6 @@ export default function Closet() {
       </div>
 
       <div className="page-content">
-        <button
-          className="btn-primary"
-          style={{ marginBottom: '16px' }}
-          onClick={() => inputRef.current.click()}
-          disabled={uploading}
-        >
-          {uploading ? 'アップロード中...' : '+ 服を追加する'}
-        </button>
         <input
           ref={inputRef}
           type="file"
@@ -150,17 +149,53 @@ export default function Closet() {
           onChange={handleFileChange}
         />
 
+        {/* カテゴリフィルタータブ */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '4px',
+          marginBottom: '16px',
+          scrollbarWidth: 'none',
+        }}>
+          {filterTabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setFilterCat(tab)}
+              style={{
+                padding: '7px 16px',
+                borderRadius: '20px',
+                border: filterCat === tab ? 'none' : '1.5px solid #F0E8E8',
+                background: filterCat === tab ? '#E8A0A8' : '#FFFFFF',
+                color: filterCat === tab ? '#FFFFFF' : '#888888',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                transition: 'all 0.15s',
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', color: '#bbb', padding: '40px 0' }}>
             読み込み中...
           </div>
         ) : closetItems.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#bbb', padding: '40px 0', fontSize: '14px', lineHeight: 2 }}>
-            まだ服が登録されていません<br />上のボタンから追加してください
+            まだ服が登録されていません<br />右下の + ボタンから追加してください
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#bbb', padding: '40px 0', fontSize: '14px', lineHeight: 2 }}>
+            このカテゴリの服がありません
           </div>
         ) : (
           <div className="closet-grid">
-            {closetItems.map(item => (
+            {filteredItems.map(item => (
               <ClosetCard
                 key={item.id}
                 item={item}
@@ -185,6 +220,37 @@ export default function Closet() {
       </div>
 
       <NavButtons />
+
+      {/* FAB：服を追加する */}
+      <button
+        onClick={() => inputRef.current.click()}
+        disabled={uploading}
+        style={{
+          position: 'fixed',
+          bottom: '88px',
+          right: '20px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: uploading ? '#F0C4C8' : '#E8A0A8',
+          color: '#FFFFFF',
+          border: 'none',
+          fontSize: '28px',
+          fontWeight: 700,
+          cursor: uploading ? 'not-allowed' : 'pointer',
+          boxShadow: '0 4px 16px rgba(232,160,168,0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 200,
+          transition: 'background 0.2s',
+          flex: 'none',
+          lineHeight: 1,
+        }}
+        title="服を追加する"
+      >
+        {uploading ? '…' : '+'}
+      </button>
 
       {/* カテゴリ選択モーダル */}
       {showCategoryModal && (

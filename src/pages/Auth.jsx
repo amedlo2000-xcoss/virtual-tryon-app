@@ -162,9 +162,42 @@ export default function Auth() {
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           padding: '32px 28px',
         }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#333', marginBottom: '24px', textAlign: 'center' }}>
-            {mode === 'login' ? 'ログイン' : mode === 'signup' ? '新規登録' : 'パスワードをリセット'}
-          </h2>
+          {/* タブ切り替え（ログイン/新規登録） */}
+          {mode !== 'forgot' ? (
+            <div style={{
+              display: 'flex',
+              background: '#FAF5F0',
+              borderRadius: '14px',
+              padding: '4px',
+              marginBottom: '24px',
+            }}>
+              {['login', 'signup'].map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => { setMode(m); setMessage(null); setEmail(''); setPassword('') }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: mode === m ? '#E8A0A8' : 'transparent',
+                    color: mode === m ? '#FFFFFF' : '#888888',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {m === 'login' ? 'ログイン' : '新規登録'}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#333', marginBottom: '24px', textAlign: 'center' }}>
+              パスワードをリセット
+            </h2>
+          )}
 
           {/* メッセージ (display:none方式でDOM安定) */}
           <div style={{
@@ -364,9 +397,9 @@ export default function Auth() {
             </form>
           )}
 
-          {/* モード切替・ナビゲーション */}
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            {mode === 'forgot' ? (
+          {/* forgotモードのみ：ログインに戻る */}
+          {mode === 'forgot' && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
               <button
                 onClick={goToLogin}
                 style={{
@@ -381,29 +414,8 @@ export default function Auth() {
               >
                 ログインに戻る
               </button>
-            ) : (
-              <>
-                <span style={{ fontSize: '13px', color: '#999' }}>
-                  {mode === 'login' ? 'アカウントをお持ちでない方は' : 'すでにアカウントをお持ちの方は'}
-                </span>
-                <button
-                  onClick={toggleMode}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#E8A0A8',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    marginLeft: '4px',
-                    padding: 0,
-                  }}
-                >
-                  {mode === 'login' ? '新規登録' : 'ログイン'}
-                </button>
-              </>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
       </div>

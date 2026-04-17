@@ -427,11 +427,43 @@ export default function CoordinateResult() {
             <div className="portrait-preview" style={{ marginBottom: '16px' }}>
               <img src={tryonResult} alt="試着結果" />
             </div>
+            {/* 保存・シェアボタン */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <ShareButton imageUrl={tryonResult} />
+              <a
+                href={tryonResult}
+                download="miron-tryon.jpg"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  padding: '14px',
+                  background: '#C9A96E',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  boxSizing: 'border-box',
+                }}
+              >
+                画像を保存する
+              </a>
               <button
-                className="btn-primary"
-                style={{ background: '#EDE8E1', color: '#666' }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: '#EDE8E1',
+                  color: '#666',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
                 onClick={() => { setTryonResult(null); setProgress(0); setLoadingStep(null) }}
               >
                 もう一度試着する
