@@ -638,12 +638,7 @@ export default function Admin() {
         <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#888', margin: '0 0 16px', letterSpacing: '0.08em' }}>
           KPI サマリー
         </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '12px',
-          marginBottom: '32px',
-        }}>
+        <div className="kpi-grid">
           <KpiCard label="総ユーザー数"                  value={kpi.totalUsers}  loading={kpiLoading} />
           <KpiCard label="本日の新規登録"                value={kpi.todayNew}    loading={kpiLoading} />
           <KpiCard label="今月の新規登録"                value={kpi.monthNew}    loading={kpiLoading} />

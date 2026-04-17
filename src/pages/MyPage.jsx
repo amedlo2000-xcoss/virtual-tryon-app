@@ -124,7 +124,7 @@ export default function MyPage() {
         </button>
       </div>
 
-      <div style={{ padding: '24px 20px', maxWidth: '480px', margin: '0 auto' }}>
+      <div className="page-content-wrapper">
 
         {/* アカウント情報 */}
         <div style={{

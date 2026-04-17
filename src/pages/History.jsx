@@ -49,7 +49,7 @@ export default function History() {
         <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#333', margin: 0 }}>試着履歴</h1>
       </div>
 
-      <div style={{ padding: '20px', maxWidth: '480px', margin: '0 auto' }}>
+      <div className="page-content-wrapper">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
             <div style={{
@@ -87,11 +87,7 @@ export default function History() {
             </button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-          }}>
+          <div className="history-grid" style={{ display: 'grid', gap: '12px' }}>
             {sessions.map((s) => (
               <div
                 key={s.id}

@@ -579,3 +579,96 @@ button:active {
   text-align: center;
   line-height: 1.5;
 }
+
+/* =====================
+   レスポンシブ ユーティリティ
+   ===================== */
+
+/* MyPage / History / Referral 内部コンテンツラッパー */
+.page-content-wrapper {
+  padding: 16px;
+  width: 100%;
+}
+
+/* Admin KPIグリッド（デフォルト: 2列） */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+/* History グリッド（デフォルト: 2列） */
+.history-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* =====================
+   タブレット (481px〜768px)
+   ===================== */
+@media (min-width: 481px) {
+  .app-container {
+    max-width: 768px;
+  }
+
+  .page {
+    padding: 24px 20px 100px;
+  }
+
+  .bottom-nav {
+    max-width: 768px;
+  }
+
+  .closet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .page-content-wrapper {
+    padding: 20px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .history-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* =====================
+   PC (769px〜)
+   ===================== */
+@media (min-width: 769px) {
+  .app-container {
+    max-width: 1200px;
+  }
+
+  .page {
+    padding: 32px 24px 100px;
+  }
+
+  .bottom-nav {
+    max-width: 1200px;
+  }
+
+  .closet-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .page-content-wrapper {
+    padding: 24px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .history-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
