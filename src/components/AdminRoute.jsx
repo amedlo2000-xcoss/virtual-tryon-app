@@ -1,4 +1,4 @@
-import { useEffect, useState, startTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
@@ -9,33 +9,43 @@ export default function AdminRoute() {
   const [isAdmin, setIsAdmin] = useState(null)
   const [checking, setChecking] = useState(true)
 
-  const userId = user?.id ?? null
-
   useEffect(() => {
     if (loading) return
-    if (!userId) {
+    if (!user) {
       setChecking(false)
-      startTransition(() => navigate('/admin-login', { replace: true }))
+      navigate('/admin-login', { replace: true })
       return
     }
+
     let cancelled = false
+    const userId = user.id
+
     supabase
       .from('profiles')
       .select('is_admin')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return
-        if (error || !data?.is_admin) {
+        if (error) {
+          console.error('AdminRoute error:', error)
           setIsAdmin(false)
-          startTransition(() => navigate('/admin-login', { replace: true }))
-        } else {
-          setIsAdmin(true)
+          setChecking(false)
+          navigate('/admin-login', { replace: true })
+          return
         }
+        if (!data || !data.is_admin) {
+          setIsAdmin(false)
+          setChecking(false)
+          navigate('/admin-login', { replace: true })
+          return
+        }
+        setIsAdmin(true)
         setChecking(false)
       })
+
     return () => { cancelled = true }
-  }, [userId, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id, loading])
 
   if (loading || checking) {
     return (
@@ -46,7 +56,7 @@ export default function AdminRoute() {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid #E8DDD5',
+          border: '4px solid #F5E6E8',
           borderTop: '4px solid #E8A0A8',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
