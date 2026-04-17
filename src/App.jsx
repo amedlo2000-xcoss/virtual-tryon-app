@@ -19,6 +19,8 @@ import CoordinateResult  from './pages/CoordinateResult'
 import AdminLogin        from './pages/AdminLogin'
 import Admin             from './pages/Admin'
 import ResetPassword     from './pages/ResetPassword'
+import History           from './pages/History'
+import Referral          from './pages/Referral'
 
 function GlobalSpinner() {
   return (
@@ -86,6 +88,8 @@ function AppContent() {
             <Route path="/closet"            element={<Closet />} />
             <Route path="/coordinate"        element={<Coordinate />} />
             <Route path="/coordinate-result" element={<CoordinateResult />} />
+            <Route path="/history"           element={<History />} />
+            <Route path="/referral"          element={<Referral />} />
           </Route>
 
           {/* 管理者専用ルート — AdminRoute が Outlet で子を描画 */}

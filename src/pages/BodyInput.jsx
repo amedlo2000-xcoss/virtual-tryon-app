@@ -1,14 +1,73 @@
+import { useState, useEffect } from 'react'
 import NavButtons from '../components/NavButtons'
 import StepIndicator from '../components/StepIndicator'
 import { useTryOn } from '../context/TryOnContext'
+import { supabase } from '../supabase'
+import { useAuth } from '../context/AuthContext'
 
 export default function BodyInput() {
+  const { user } = useAuth()
   const { bodyData, setBodyData } = useTryOn()
+  const [savedProfile, setSavedProfile] = useState(null)
+  const [profileLoaded, setProfileLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    ;(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('height, weight, bust, waist, hip, usual_size')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (data) {
+        setSavedProfile(data)
+        const hasPrevData = Object.values(data).some(v => v !== null && v !== '')
+        if (hasPrevData) {
+          setBodyData({
+            height:     data.height      ?? '',
+            weight:     data.weight      ?? '',
+            bust:       data.bust        ?? '',
+            waist:      data.waist       ?? '',
+            hip:        data.hip         ?? '',
+            usualSize:  data.usual_size  ?? '',
+          })
+        }
+      }
+      setProfileLoaded(true)
+    })()
+  }, [user])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setBodyData(prev => ({ ...prev, [name]: value }))
   }
+
+  const handleUsePrevious = () => {
+    if (!savedProfile) return
+    setBodyData({
+      height:    savedProfile.height      ?? '',
+      weight:    savedProfile.weight      ?? '',
+      bust:      savedProfile.bust        ?? '',
+      waist:     savedProfile.waist       ?? '',
+      hip:       savedProfile.hip         ?? '',
+      usualSize: savedProfile.usual_size  ?? '',
+    })
+  }
+
+  const handleNext = async () => {
+    if (!user) return
+    await supabase.from('profiles').upsert({
+      id:         user.id,
+      height:     bodyData.height    || null,
+      weight:     bodyData.weight    || null,
+      bust:       bodyData.bust      || null,
+      waist:      bodyData.waist     || null,
+      hip:        bodyData.hip       || null,
+      usual_size: bodyData.usualSize || null,
+    })
+  }
+
+  const hasPrevious = savedProfile && Object.values(savedProfile).some(v => v !== null && v !== '')
 
   const fields = [
     { label: '身長', name: 'height', placeholder: '例：160', unit: 'cm' },
@@ -30,6 +89,31 @@ export default function BodyInput() {
       </div>
 
       <div className="page-content">
+
+        {/* 前回の情報を使用ボタン */}
+        {profileLoaded && hasPrevious && (
+          <button
+            onClick={handleUsePrevious}
+            style={{
+              width: '100%',
+              padding: '13px',
+              background: 'linear-gradient(135deg, #F5E6E8, #FAF0E8)',
+              border: '1.5px solid #E8D5D8',
+              borderRadius: '16px',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: '#C9A96E',
+              cursor: 'pointer',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            ↩ 前回の情報を使用する
+          </button>
+        )}
 
         {/* サイズ選択カード */}
         <div className="card" style={{ marginBottom: '16px' }}>
@@ -107,7 +191,7 @@ export default function BodyInput() {
 
       </div>
 
-      <NavButtons prevPath="/" nextPath="/upload-user" />
+      <NavButtons prevPath="/" nextPath="/upload-user" onNext={handleNext} />
     </div>
   )
 }

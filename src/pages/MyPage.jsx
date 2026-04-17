@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 import NavButtons from '../components/NavButtons'
 
+
 const INPUT_STYLE = {
   width: '100%',
   padding: '12px 14px',
@@ -131,13 +132,37 @@ export default function MyPage() {
           borderRadius: '20px',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
           padding: '20px',
-          marginBottom: '20px',
+          marginBottom: '16px',
         }}>
           <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>メールアドレス</p>
           <p style={{ fontSize: '14px', color: '#333', margin: '4px 0 0', fontWeight: 600 }}>
             {user?.email}
           </p>
         </div>
+
+        {/* 友達紹介ボタン */}
+        <button
+          onClick={() => navigate('/referral')}
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: 'linear-gradient(135deg, #F5E6E8, #FAF0E8)',
+            border: '1.5px solid #E8D5D8',
+            borderRadius: '20px',
+            fontSize: '15px',
+            fontWeight: 700,
+            color: '#C9A96E',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            boxShadow: '0 2px 12px rgba(201,169,110,0.12)',
+          }}
+        >
+          🎁 友達を紹介する
+        </button>
 
         {/* プロフィール編集フォーム */}
         <div style={{
