@@ -52,6 +52,14 @@ function daysAgo(n) {
   return d.toISOString()
 }
 
+function monthsAgo(n) {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() - n)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
 function formatDate(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -99,6 +107,85 @@ function Spinner() {
       borderRadius: '50%',
       animation: 'spin 0.8s linear infinite',
     }} />
+  )
+}
+
+// ─── バーチャート ─────────────────────────────────────────────────────────────
+const SKEL_H = [40,65,30,80,55,45,70,35,60,50,75,42,58,35,68,52,45,78,38,62,48,70,55,40,65,50,72,38,58,44]
+
+function BarChart({ data, color, loading, skeletonCount = 30 }) {
+  const [hoveredIdx, setHoveredIdx] = useState(null)
+  const max = data.length > 0 ? Math.max(...data.map(d => d.value), 1) : 1
+  const BAR_H = 160
+
+  if (loading) {
+    return (
+      <div>
+        <div style={{ height: `${BAR_H}px`, display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
+          {Array.from({ length: skeletonCount }).map((_, i) => (
+            <div key={i} style={{
+              flex: 1,
+              height: `${SKEL_H[i % SKEL_H.length]}%`,
+              background: '#F0EAE3',
+              borderRadius: '3px 3px 0 0',
+              animation: 'pulse 1.5s ease-in-out infinite',
+            }} />
+          ))}
+        </div>
+        <div style={{ height: '28px', borderTop: '1px solid #F0EAE3', marginTop: '4px' }} />
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ height: `${BAR_H}px`, display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
+        {data.map((item, i) => (
+          <div
+            key={i}
+            style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', position: 'relative', cursor: 'default' }}
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            {hoveredIdx === i && (
+              <div style={{
+                position: 'absolute',
+                bottom: `${Math.max((item.value / max) * BAR_H, item.value > 0 ? 2 : 0) + 8}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(51,51,51,0.88)',
+                color: '#fff',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                whiteSpace: 'nowrap',
+                zIndex: 10,
+                pointerEvents: 'none',
+              }}>
+                {item.fullLabel}: {item.value}件
+              </div>
+            )}
+            <div style={{
+              width: '100%',
+              height: `${Math.max((item.value / max) * BAR_H, item.value > 0 ? 2 : 0)}px`,
+              background: color,
+              borderRadius: '3px 3px 0 0',
+              opacity: hoveredIdx === i ? 0.72 : 1,
+              transition: 'opacity 0.15s',
+            }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '2px', borderTop: '1px solid #F0EAE3', marginTop: '4px', height: '24px' }}>
+        {data.map((item, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {(data.length <= 12 || i % 5 === 0) && (
+              <span style={{ fontSize: '9px', color: '#bbb' }}>{item.label}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -302,6 +389,10 @@ export default function Admin() {
   const [editUser, setEditUser]       = useState(null)
   const [editLoading, setEditLoading] = useState(false)
 
+  // グラフ
+  const [graphs, setGraphs]               = useState({ tryon: [], profiles: [], closet: [] })
+  const [graphsLoading, setGraphsLoading] = useState(true)
+
   // ─── データ取得 ─────────────────────────────────────────────────────────────
   const loadKpi = useCallback(async () => {
     setKpiLoading(true)
@@ -333,6 +424,57 @@ export default function Admin() {
     setKpiLoading(false)
   }, [])
 
+  const loadGraphs = useCallback(async () => {
+    setGraphsLoading(true)
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+
+    const days30 = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(today)
+      d.setDate(d.getDate() - (29 - i))
+      return d.toISOString().split('T')[0]
+    })
+
+    const months12 = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date()
+      d.setDate(1)
+      d.setMonth(d.getMonth() - (11 - i))
+      d.setHours(0, 0, 0, 0)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    })
+
+    const [tryonRes, profilesRes, closetRes] = await Promise.all([
+      supabase.from('tryon_sessions').select('created_at').gte('created_at', daysAgo(29)),
+      supabase.from('profiles').select('created_at').gte('created_at', monthsAgo(11)),
+      supabase.from('closet_items').select('created_at').gte('created_at', daysAgo(29)),
+    ])
+
+    const countBy = (rows, keyFn, keys) => {
+      const map = Object.fromEntries(keys.map(k => [k, 0]))
+      ;(rows || []).forEach(r => { const k = keyFn(r.created_at); if (k in map) map[k]++ })
+      return map
+    }
+
+    const tryonMap   = countBy(tryonRes.data,   s => s.split('T')[0],    days30)
+    const profileMap = countBy(profilesRes.data, s => s.substring(0, 7), months12)
+    const closetMap  = countBy(closetRes.data,   s => s.split('T')[0],   days30)
+
+    const fmtDay = iso => {
+      const [y, m, d] = iso.split('-')
+      return { label: `${m}/${d}`, fullLabel: `${y}/${m}/${d}` }
+    }
+    const fmtMonth = iso => {
+      const [y, m] = iso.split('-')
+      return { label: `${parseInt(m)}月`, fullLabel: `${y}年${parseInt(m)}月` }
+    }
+
+    setGraphs({
+      tryon:    days30.map(d   => ({ ...fmtDay(d),   value: tryonMap[d] })),
+      profiles: months12.map(m => ({ ...fmtMonth(m), value: profileMap[m] })),
+      closet:   days30.map(d   => ({ ...fmtDay(d),   value: closetMap[d] })),
+    })
+    setGraphsLoading(false)
+  }, [])
+
   const loadUsers = useCallback(async (pg = 0) => {
     setUserLoading(true)
     const from = pg * PAGE_SIZE
@@ -354,7 +496,8 @@ export default function Admin() {
   useEffect(() => {
     loadKpi()
     loadUsers(0)
-  }, [loadKpi, loadUsers])
+    loadGraphs()
+  }, [loadKpi, loadUsers, loadGraphs])
 
   // ─── ユーザー操作 ───────────────────────────────────────────────────────────
   const showToast = (type, text) => {
@@ -505,16 +648,31 @@ export default function Admin() {
           グラフ
         </h2>
 
-        <div style={{
-          background: '#FFFFFF',
-          borderRadius: '20px',
-          padding: '24px',
-          marginBottom: '16px',
-          textAlign: 'center',
-          color: '#bbb',
-          fontSize: '13px',
-        }}>
-          グラフ機能は準備中です
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+
+          {/* 日別AI試着回数 */}
+          <div style={{ background: '#FFFFFF', borderRadius: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: '20px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 16px' }}>
+              日別 AI試着回数（過去30日）
+            </p>
+            <BarChart data={graphs.tryon} color="#E8A0A8" loading={graphsLoading} skeletonCount={30} />
+          </div>
+
+          {/* 月別新規登録数 */}
+          <div style={{ background: '#FFFFFF', borderRadius: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: '20px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 16px' }}>
+              月別 新規登録数（過去12ヶ月）
+            </p>
+            <BarChart data={graphs.profiles} color="#C9A96E" loading={graphsLoading} skeletonCount={12} />
+          </div>
+
+          {/* 日別クローゼット登録数 */}
+          <div style={{ background: '#FFFFFF', borderRadius: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: '20px' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 16px' }}>
+              日別 クローゼット登録数（過去30日）
+            </p>
+            <BarChart data={graphs.closet} color="#E8A0A8" loading={graphsLoading} skeletonCount={30} />
+          </div>
         </div>
 
         {/* ③ ユーザー一覧 */}
