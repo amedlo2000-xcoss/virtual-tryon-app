@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useTryOn } from '../context/TryOnContext'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabase'
 import ShareButton from '../components/ShareButton'
 import NavButtons from '../components/NavButtons'
@@ -108,6 +109,7 @@ async function saveIntermediateImage(url) {
 
 export default function CoordinateResult() {
   const { userImage, setUserImage, combinedOutfit } = useTryOn()
+  const { user } = useAuth()
   const inputRef = useRef(null)
 
   const [uploading, setUploading] = useState(false)
@@ -205,6 +207,7 @@ export default function CoordinateResult() {
         )
 
         setTryonResult(step2Result)
+        if (user?.id) await supabase.from('tryon_sessions').insert({ user_id: user.id, result_url: step2Result })
 
       } else if (closetCat === 'one-pieces' || newCat === 'one-pieces') {
         // ワンピース系：one-piecesを1回試着
@@ -213,6 +216,7 @@ export default function CoordinateResult() {
         console.log('[CoordinateResult] ワンピース試着開始')
         const result = await runFashnTryOn(userImage, onePieceImage, 'one-pieces', setProgress)
         setTryonResult(result)
+        if (user?.id) await supabase.from('tryon_sessions').insert({ user_id: user.id, result_url: result })
 
       } else {
         // 同カテゴリ：新しい服を優先して1回試着
@@ -222,6 +226,7 @@ export default function CoordinateResult() {
         console.log(`[CoordinateResult] 単体試着開始 (category: ${cat})`)
         const result = await runFashnTryOn(userImage, garment, cat, setProgress)
         setTryonResult(result)
+        if (user?.id) await supabase.from('tryon_sessions').insert({ user_id: user.id, result_url: result })
       }
 
     } catch (e) {

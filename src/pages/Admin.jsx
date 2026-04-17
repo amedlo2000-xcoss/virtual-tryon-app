@@ -486,8 +486,17 @@ export default function Admin() {
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    if (!error) {
-      setUsers((data || []).map(u => ({ ...u, tryon_count: 0 })))
+    if (!error && data) {
+      const userIds = data.map(u => u.id)
+      const { data: tryonData } = await supabase
+        .from('tryon_sessions')
+        .select('user_id')
+        .in('user_id', userIds)
+      const tryonCounts = {}
+      ;(tryonData || []).forEach(t => {
+        tryonCounts[t.user_id] = (tryonCounts[t.user_id] || 0) + 1
+      })
+      setUsers(data.map(u => ({ ...u, tryon_count: tryonCounts[u.id] || 0 })))
       setUserCount(count || 0)
     }
     setUserLoading(false)
