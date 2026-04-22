@@ -29,13 +29,20 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       const networkFetch = fetch(event.request)
         .then((response) => {
-          if (response && response.status === 200) {
+          // opaque responseやエラーはキャッシュしない
+          if (response && response.status === 200 && response.type !== 'opaque') {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(() => cached);
+        .catch(() => {
+          // ネットワーク失敗時はキャッシュを返す、なければ504
+          return cached || new Response('Network error', {
+            status: 504,
+            statusText: 'Gateway Timeout',
+          });
+        });
       return cached || networkFetch;
     })
   );
