@@ -21,6 +21,7 @@ import Admin             from './pages/Admin'
 import ResetPassword     from './pages/ResetPassword'
 import History           from './pages/History'
 import Referral          from './pages/Referral'
+import KartePage        from './pages/KartePage'
 
 function GlobalSpinner() {
   return (
@@ -90,6 +91,7 @@ function AppContent() {
             <Route path="/coordinate-result" element={<CoordinateResult />} />
             <Route path="/history"           element={<History />} />
             <Route path="/referral"          element={<Referral />} />
+            <Route path="/karte"             element={<KartePage />} />
           </Route>
 
           {/* 管理者専用ルート — AdminRoute が Outlet で子を描画 */}
