@@ -58,7 +58,9 @@ const SYSTEM_PROMPT = `あなたは顔診断の専門家です。送られてき
 
 export async function analyzeImage(base64Image, mimeType) {
   const apiKey = import.meta.env.VITE_CLAUDE_API_KEY
-  if (!apiKey) throw new Error('VITE_CLAUDE_API_KEY が設定されていません')
+  if (!apiKey || apiKey === 'your_key_here') {
+    throw new Error('.env の VITE_CLAUDE_API_KEY に有効な Claude API キーを設定してください')
+  }
 
   const response = await fetch(CLAUDE_API_URL, {
     method: 'POST',

@@ -4,10 +4,14 @@ export default function CameraGuide({ onImageReady }) {
   const inputRef = useRef(null)
 
   function handleFile(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target?.files?.[0]
+    if (!file || typeof onImageReady !== 'function') return
     const reader = new FileReader()
-    reader.onload = (ev) => onImageReady(file, ev.target.result)
+    reader.onload = (ev) => {
+      const result = ev.target?.result
+      if (result) onImageReady(file, result)
+    }
+    reader.onerror = () => console.error('FileReader error')
     reader.readAsDataURL(file)
   }
 

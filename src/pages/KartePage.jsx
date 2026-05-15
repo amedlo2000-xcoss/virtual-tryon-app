@@ -27,10 +27,13 @@ export default function KartePage() {
       const reader = new FileReader()
       const base64 = await new Promise((resolve, reject) => {
         reader.onload = (e) => {
-          const result = e.target.result
-          resolve(result.split(',')[1])
+          const result = e.target?.result
+          if (!result) { reject(new Error('画像の読み込みに失敗しました')); return }
+          const parts = result.split(',')
+          if (parts.length < 2) { reject(new Error('画像フォーマットが不正です')); return }
+          resolve(parts[1])
         }
-        reader.onerror = reject
+        reader.onerror = () => reject(new Error('ファイルの読み込みエラー'))
         reader.readAsDataURL(imageFile)
       })
       const mimeType = imageFile.type || 'image/jpeg'
